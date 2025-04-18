@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/modal.css">
+    
+    <!-- Add Dexie.js for IndexedDB support -->
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
 </head>
 <body>
     <header>
@@ -88,6 +91,13 @@
                     </div>
                     <h3>Instant Notifications</h3>
                     <p>Get alerts when new jobs matching your criteria are posted.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-wifi-slash"></i>
+                    </div>
+                    <h3>Works Offline</h3>
+                    <p>Continue your job search even when you're offline, with data synced when reconnected.</p>
                 </div>
             </div>
         </div>
@@ -258,8 +268,33 @@
         </div>
     </footer>
 
+    <!-- Load our scripts - order is important -->
+    <script src="js/db.js"></script>
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
     <script src="js/animations.js"></script>
+    
+    <!-- Offline status indicator -->
+    <div id="offline-indicator" style="display: none; position: fixed; bottom: 20px; left: 20px; background-color: #dc3545; color: white; padding: 10px 15px; border-radius: 4px; z-index: 1000;">
+        <i class="fas fa-wifi-slash"></i> You're offline. Some features may be limited.
+    </div>
+
+    <script>
+        // Show/hide offline indicator
+        function updateOnlineStatus() {
+            const indicator = document.getElementById('offline-indicator');
+            if (navigator.onLine) {
+                indicator.style.display = 'none';
+            } else {
+                indicator.style.display = 'block';
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // Check initial status
+        updateOnlineStatus();
+    </script>
 </body>
 </html>

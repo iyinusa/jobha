@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/modal.css">
+    
+    <!-- Add Dexie.js for IndexedDB support -->
+    <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+    
     <style>
         /* Additional styles for job search page */
         .search-section {
@@ -217,6 +221,49 @@
             border-color: var(--primary);
         }
         
+        /* Offline indicator */
+        #offline-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* Search history section */
+        .search-history {
+            margin-bottom: 1rem;
+        }
+        
+        .search-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--gray-light);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .search-history-item:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .search-history-item .search-text {
+            font-weight: 500;
+        }
+        
+        .search-history-item .search-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
         @media (max-width: 768px) {
             .job-grid {
                 grid-template-columns: 1fr;
@@ -340,6 +387,15 @@
                 </div>
                 
                 <div class="job-sidebar">
+                    <!-- New search history section -->
+                    <div class="sidebar-section">
+                        <h3>Recent Searches</h3>
+                        <div class="search-history" id="search-history">
+                            <!-- Will be populated dynamically -->
+                            <div class="loading">Loading search history...</div>
+                        </div>
+                    </div>
+                    
                     <div class="sidebar-section">
                         <h3>Trending Skills</h3>
                         <div class="trending-skills" id="trending-skills">
@@ -354,6 +410,7 @@
                             <li>Set up job alerts to get notified of new openings</li>
                             <li>Optimize your CV using our AI tools</li>
                             <li>Create tailored cover letters for higher success rates</li>
+                            <li>Save jobs to view later, even when offline</li>
                         </ul>
                     </div>
                     
@@ -419,6 +476,13 @@
         </div>
     </footer>
 
+    <!-- Offline indicator -->
+    <div id="offline-indicator">
+        <i class="fas fa-wifi-slash"></i> You're offline. Using locally stored jobs.
+    </div>
+
+    <!-- Load our scripts - order is important -->
+    <script src="js/db.js"></script>
     <script src="js/api.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -443,9 +507,18 @@
             const searchBtn = document.getElementById('search-btn');
             const jobListings = document.getElementById('job-listings');
             const pagination = document.getElementById('pagination');
+            const searchHistory = document.getElementById('search-history');
             
             // Load trending skills
             loadTrendingSkills();
+            
+            // Load search history
+            loadSearchHistory();
+            
+            // Handle offline status display
+            updateOfflineStatus();
+            window.addEventListener('online', updateOfflineStatus);
+            window.addEventListener('offline', updateOfflineStatus);
             
             // Perform search when button is clicked
             searchBtn.addEventListener('click', performSearch);
@@ -475,12 +548,29 @@
                 e.preventDefault();
                 const email = alertsForm.querySelector('input[type="email"]').value;
                 
-                // Show success message
-                alertsForm.innerHTML = '<div class="success-message">Job alert created! You will receive notifications when new matching jobs are posted.</div>';
+                // Set up notifications with JobhaAPI
+                const keywords = [keywordInput.value].filter(k => k.trim() !== '');
+                const locations = [locationInput.value].filter(l => l.trim() !== '');
+                
+                if (keywords.length > 0) {
+                    jobhaApi.jobs.setupNotifications(keywords, locations, 'daily')
+                        .then(response => {
+                            // Show success message
+                            alertsForm.innerHTML = '<div class="success-message">Job alert created! ' + 
+                                (response.offline ? 'Alerts will be synced when you\'re back online.' : 'You will receive notifications when new matching jobs are posted.') + 
+                                '</div>';
+                        })
+                        .catch(error => {
+                            alertsForm.innerHTML = `<div class="error-message">${error.message}</div>`;
+                        });
+                } else {
+                    // Show success message (for demo purposes)
+                    alertsForm.innerHTML = '<div class="success-message">Job alert created! You will receive notifications when new matching jobs are posted.</div>';
+                }
             });
             
             /**
-             * Perform job search with current inputs
+             * Perform job search with current inputs using the offline-first API
              */
             function performSearch() {
                 const keyword = keywordInput.value.trim();
@@ -497,17 +587,14 @@
                 jobListings.innerHTML = '<div class="loading">Searching for matching jobs...</div>';
                 pagination.innerHTML = '';
                 
-                // In a real app, this would use the API client
-                // jobhaApi.jobs.searchJobs(keyword, location)
-                //   .then(displayJobResults)
-                //   .catch(handleSearchError);
-                
-                // For demo, use timeout to simulate API call
-                setTimeout(() => {
-                    // Mock search results
-                    const results = getMockJobResults(keyword, location);
-                    displayJobResults(results);
-                }, 1500);
+                // Use the offline-first API to search for jobs
+                jobhaApi.jobs.searchJobs(keyword, location)
+                    .then(displayJobResults)
+                    .catch(handleSearchError)
+                    .finally(() => {
+                        // Refresh the search history after search
+                        loadSearchHistory();
+                    });
             }
             
             /**
@@ -521,6 +608,13 @@
                 }
                 
                 let html = '';
+                
+                if (results.offline) {
+                    html += '<div class="offline-notice" style="background-color: #fff3cd; color: #856404; padding: 0.75rem; margin-bottom: 1rem; border-radius: var(--radius); border: 1px solid #ffeeba;">' +
+                        '<i class="fas fa-exclamation-triangle"></i> ' +
+                        'You\'re viewing jobs from your local database while offline.' +
+                        '</div>';
+                }
                 
                 results.jobs.forEach(job => {
                     const companyInitial = job.company.charAt(0).toUpperCase();
@@ -574,10 +668,19 @@
                     btn.addEventListener('click', function(e) {
                         e.preventDefault();
                         const jobId = this.getAttribute('data-id');
-                        // In real app: jobhaApi.jobs.saveJob(jobId);
-                        this.innerHTML = '<i class="fas fa-check"></i> Saved';
-                        this.classList.add('btn-secondary');
-                        this.classList.remove('btn-outline');
+                        
+                        // Use offline-first job saving
+                        jobhaApi.jobs.saveJob(jobId)
+                            .then(response => {
+                                this.innerHTML = '<i class="fas fa-check"></i> Saved' + 
+                                    (response.offline ? ' (Offline)' : '');
+                                this.classList.add('btn-secondary');
+                                this.classList.remove('btn-outline');
+                            })
+                            .catch(error => {
+                                console.error('Error saving job:', error);
+                                alert('Failed to save job: ' + error.message);
+                            });
                     });
                 });
             }
@@ -591,109 +694,129 @@
             }
             
             /**
-             * Load trending skills in the sidebar
+             * Load trending skills in the sidebar using the offline-first API
              */
             function loadTrendingSkills() {
                 const trendingSkillsElement = document.getElementById('trending-skills');
                 
-                // In a real app, this would use the API client
-                // jobhaApi.jobs.getTrendingSkills()
-                //   .then(displayTrendingSkills)
-                //   .catch(error => {
-                //     trendingSkillsElement.innerHTML = 'Unable to load trending skills.';
-                //   });
-                
-                // For demo, use timeout to simulate API call
-                setTimeout(() => {
-                    const skills = [
-                        {name: "Python", growth: 15, demand: "Very High"},
-                        {name: "React", growth: 12, demand: "High"},
-                        {name: "Machine Learning", growth: 22, demand: "Very High"},
-                        {name: "Docker", growth: 18, demand: "High"},
-                        {name: "AWS", growth: 14, demand: "High"}
-                    ];
-                    
-                    let html = '';
-                    skills.forEach(skill => {
-                        html += `<span class="skill-tag">${skill.name}</span>`;
-                    });
-                    
-                    trendingSkillsElement.innerHTML = html;
-                    
-                    // Add click handler to skill tags
-                    document.querySelectorAll('.skill-tag').forEach(tag => {
-                        tag.addEventListener('click', function() {
-                            keywordInput.value = this.textContent;
-                            performSearch();
+                jobhaApi.jobs.getTrendingSkills()
+                    .then(response => {
+                        if (!response.skills || response.skills.length === 0) {
+                            trendingSkillsElement.innerHTML = 'No trending skills available.';
+                            return;
+                        }
+                        
+                        let html = '';
+                        if (response.offline) {
+                            html += '<div class="offline-notice" style="font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--gray);">' +
+                                '<i class="fas fa-info-circle"></i> Using cached data while offline' +
+                                '</div>';
+                        }
+                        
+                        response.skills.forEach(skill => {
+                            html += `<span class="skill-tag">${skill.name}</span>`;
                         });
+                        
+                        trendingSkillsElement.innerHTML = html;
+                        
+                        // Add click handler to skill tags
+                        document.querySelectorAll('.skill-tag').forEach(tag => {
+                            tag.addEventListener('click', function() {
+                                keywordInput.value = this.textContent;
+                                performSearch();
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        trendingSkillsElement.innerHTML = `<div class="error-message">Failed to load trending skills: ${error.message}</div>`;
                     });
-                }, 1000);
             }
             
             /**
-             * Generate mock job results for demo purposes
+             * Load search history from IndexedDB
              */
-            function getMockJobResults(keyword, location) {
-                const currentDate = new Date();
+            function loadSearchHistory() {
+                if (!window.JobhaDB) {
+                    searchHistory.innerHTML = '<div class="error-message">Database not initialized</div>';
+                    return;
+                }
                 
-                return {
-                    success: true,
-                    page: 1,
-                    limit: 10,
-                    total: 120,
-                    jobs: [
-                        {
-                            id: "job-1",
-                            title: `Senior ${keyword}`,
-                            company: "Tech Solutions Inc.",
-                            location: location || "Remote",
-                            description: `We are looking for a skilled ${keyword} to join our team. This role focuses on building scalable and maintainable code while working within an agile team.`,
-                            salary: "$110K - $150K",
-                            posted_date: "2 days ago",
-                            url: "https://example.com/job1"
-                        },
-                        {
-                            id: "job-2",
-                            title: `${keyword} Engineer`,
-                            company: "Innovative Systems",
-                            location: location || "San Francisco, CA",
-                            description: `Join our growing team as a ${keyword} Engineer and help us build the next generation of our product. Experience with cloud technologies preferred.`,
-                            salary: "$95K - $130K",
-                            posted_date: "Just now",
-                            url: "https://example.com/job2"
-                        },
-                        {
-                            id: "job-3",
-                            title: `Junior ${keyword}`,
-                            company: "StartupHub",
-                            location: location || "New York, NY",
-                            description: `Great opportunity for a junior ${keyword} to grow their skills in a fast-paced environment. Mentorship provided by senior team members.`,
-                            salary: "$70K - $90K",
-                            posted_date: "1 week ago",
-                            url: "https://example.com/job3"
-                        },
-                        {
-                            id: "job-4",
-                            title: `${keyword} Team Lead`,
-                            company: "Enterprise Solutions",
-                            location: location || "Chicago, IL",
-                            description: `Looking for an experienced ${keyword} to lead our development team. Must have 5+ years of experience and strong leadership skills.`,
-                            salary: "$130K - $170K",
-                            posted_date: "3 days ago",
-                            url: "https://example.com/job4"
-                        },
-                        {
-                            id: "job-5",
-                            title: `${keyword} Contractor`,
-                            company: "Tech Consultants",
-                            location: location || "Remote",
-                            description: `6-month contract role for a ${keyword} specialist to assist with a major project. Possibility for extension or conversion to full-time.`,
-                            salary: "$85/hour",
-                            posted_date: "1 day ago",
-                            url: "https://example.com/job5"
+                JobhaDB.getSearchHistory(5)
+                    .then(history => {
+                        if (history.length === 0) {
+                            searchHistory.innerHTML = '<p>No recent searches</p>';
+                            return;
                         }
-                    ]
-                };
+                        
+                        let html = '';
+                        history.forEach(item => {
+                            const date = new Date(item.timestamp);
+                            const timeAgo = getTimeAgo(date);
+                            
+                            html += `
+                                <div class="search-history-item" data-query="${item.query}" data-location="${item.location}">
+                                    <div class="search-text">
+                                        <strong>${item.query}</strong>
+                                        ${item.location ? ` in ${item.location}` : ''}
+                                    </div>
+                                    <div class="search-time">${timeAgo}</div>
+                                </div>
+                            `;
+                        });
+                        
+                        searchHistory.innerHTML = html;
+                        
+                        // Add click handlers to search history items
+                        document.querySelectorAll('.search-history-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                const query = this.getAttribute('data-query');
+                                const location = this.getAttribute('data-location');
+                                
+                                keywordInput.value = query;
+                                locationInput.value = location;
+                                performSearch();
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        searchHistory.innerHTML = `<div class="error-message">Failed to load search history: ${error.message}</div>`;
+                    });
+            }
+            
+            /**
+             * Update the offline indicator based on network status
+             */
+            function updateOfflineStatus() {
+                const indicator = document.getElementById('offline-indicator');
+                if (!navigator.onLine) {
+                    indicator.style.display = 'block';
+                } else {
+                    indicator.style.display = 'none';
+                }
+            }
+            
+            /**
+             * Get human-readable time ago string
+             */
+            function getTimeAgo(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+                
+                let interval = Math.floor(seconds / 31536000);
+                if (interval > 1) return interval + ' years ago';
+                
+                interval = Math.floor(seconds / 2592000);
+                if (interval >= 1) return interval + ' months ago';
+                
+                interval = Math.floor(seconds / 86400);
+                if (interval >= 1) return interval + ' days ago';
+                
+                interval = Math.floor(seconds / 3600);
+                if (interval >= 1) return interval + ' hours ago';
+                
+                interval = Math.floor(seconds / 60);
+                if (interval >= 1) return interval + ' minutes ago';
+                
+                return 'just now';
             }
         });
     </script>
