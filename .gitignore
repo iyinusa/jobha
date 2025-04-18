@@ -1,0 +1,83 @@
+# Jobha - AI-Powered Job Agent .gitignore
+
+# Environment variables
+.env
+*.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Flask/FastAPI
+instance/
+.webassets-cache
+
+# Uploads and static files
+backend/static/uploads/
+uploads/
+
+# Database
+*.sqlite
+*.db
+*.sql
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Distribution / build files
+dist/
+build/
+*.log
+
+# Docker
+.docker/
+docker-volumes/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# System files
+Thumbs.db
+.DS_Store
+*.bak
