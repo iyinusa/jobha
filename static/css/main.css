@@ -43248,6 +43248,10 @@ h4 {
   display: block;
 }
 
+.main-header .logo-white, .main-header .logo-color, .footer-logo {
+  height: 50px !important;
+}
+
 .newsletter-form button {
   right: 0;
   top: 0;
