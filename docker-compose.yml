@@ -1,24 +1,13 @@
 version: '3.8'
 
 services:
-  backend:
+  app:
     build:
-      context: ./backend
+      context: .
     ports:
-      - "8000:8000"
+      - "80:8000"  # Map port 80 to the app service
     volumes:
-      - ./backend:/app
+      - .:/app
     env_file:
       - .env
-    restart: always
-
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-    depends_on:
-      - backend
     restart: always

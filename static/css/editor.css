@@ -1,0 +1,232 @@
+/* Editor Specific Styles */
+
+/* Document Editor Layout */
+.editor-section {
+    min-height: 80vh;
+    padding: 20px 0;
+}
+
+.panel-column, .editor-column, .job-panel-column {
+    height: calc(80vh - 40px);
+    margin-bottom: 20px;
+}
+
+.panel-wrapper, .editor-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent overflow */
+}
+
+.panel-header {
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    position: relative; /* Position context for absolute elements */
+}
+
+/* Editor Content Styles */
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+}
+
+.tab-pane {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tab-pane.active {
+    display: flex;
+}
+
+.editor-content {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #ffffff;
+    min-height: 100%;
+    position: relative; /* Ensure proper positioning */
+}
+
+#cv-editor, #cover-letter-editor {
+    outline: none;
+    min-height: 100%;
+    padding: 0;
+    overflow-y: auto;
+}
+
+.document-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px;
+    background-color: #ffffff;
+    min-height: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Style for CV content */
+.document-content h1 {
+    font-size: 24px;
+    color: #333;
+    font-weight: 700;
+    margin-top: 0; /* Remove default margin to prevent overlap */
+}
+
+.document-content h2 {
+    font-size: 18px;
+    color: #2c50ed;
+    font-weight: 600;
+    margin-top: 1.5rem; /* Consistent spacing */
+}
+
+.document-content h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.document-content ul {
+    padding-left: 20px;
+    margin-bottom: 1rem; /* Consistent spacing */
+}
+
+.document-content ul li {
+    margin-bottom: 4px;
+}
+
+.skills-list {
+    list-style-type: none;
+    padding-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Add gap for better spacing */
+    margin-top: 10px;
+}
+
+.skills-list li {
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0; /* Override default margin */
+}
+
+/* Toolbar Styling */
+.editor-header {
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.editor-toolbar {
+    padding: 8px;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0; /* Prevent toolbar from shrinking */
+}
+
+.editor-toolbar button {
+    padding: 4px 8px;
+    margin: 0 1px; /* Add space between buttons */
+}
+
+/* Panel Lists */
+.document-list .list-group-item, .job-list .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 12px 16px;
+    transition: background-color 0.2s ease;
+}
+
+.document-list .list-group-item:hover, .job-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Nav Tabs Styling */
+.editor-header .nav-tabs {
+    border-bottom: none;
+}
+
+.editor-header .nav-link {
+    border: none;
+    padding: 8px 16px;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.editor-header .nav-link.active {
+    color: #2c50ed;
+    border-bottom: 2px solid #2c50ed;
+    background-color: transparent;
+}
+
+/* Action buttons */
+.action-button-section {
+    border-top: 1px solid #e9ecef;
+    padding: 15px 0;
+    background-color: #f8f9fa;
+    position: sticky;
+    bottom: 0;
+    z-index: 10; /* Ensure it stays on top */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1199.98px) {
+    .job-panel-column {
+        display: none; /* Hide job panel on smaller screens */
+    }
+    
+    .editor-column {
+        flex: 0 0 calc(100% - 33.33%); /* Adjust width when right panel is hidden */
+        max-width: calc(100% - 33.33%);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .panel-column, .editor-column {
+        height: auto;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .panel-wrapper, .editor-wrapper {
+        height: auto;
+        margin-bottom: 20px;
+        max-height: none;
+    }
+    
+    .editor-content {
+        min-height: 60vh;
+    }
+    
+    .action-button-section .row .col-lg-9 {
+        margin-left: 0;
+    }
+    
+    .action-button-section .offset-lg-3 {
+        margin-left: 0;
+    }
+}
+
+/* Ensure proper alignment and prevent overflow */
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.container-fluid {
+    padding: 0 20px;
+}
+
+/* Fix z-index issues */
+.editor-wrapper {
+    z-index: 1;
+}
+
+.action-button-section {
+    z-index: 2;
+}

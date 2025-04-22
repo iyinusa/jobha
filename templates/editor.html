@@ -1,0 +1,320 @@
+{% include 'header.html' %}
+
+{% block content %}
+<!-- Page header section start -->
+<section class="page-header position-relative overflow-hidden ptb-80 bg-dark" style="background: url('{{ url_for('static', path='/img/shape/dot-dot-wave-shape.svg') }}')no-repeat bottom left">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-12">
+                <h1 class="display-5 fw-bold">&nbsp;</h1>
+                <p class="lead">&nbsp;</p>
+            </div>
+        </div>
+        <div class="bg-circle rounded-circle circle-shape-3 position-absolute bg-dark-light right-5"></div>
+    </div>
+</section>
+<!-- Page header section end -->
+
+<!-- Editor section start -->
+<section class="editor-section">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar - CV/Documents Panel -->
+            <div class="col-lg-3 col-md-4 panel-column">
+                <div class="panel-wrapper shadow-sm rounded-custom bg-white">
+                    <div class="panel-header p-3 border-bottom">
+                        <h5 class="mb-0">Your Documents</h5>
+                        <div class="float-right">Upload</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="document-list">
+                            <div class="list-group list-group-flush">
+                                <a href="#cv-panel" class="list-group-item list-group-item-action active d-flex justify-content-between align-items-center" data-bs-toggle="tab">
+                                    <div>
+                                        <i class="fas fa-file-alt me-2"></i> My Resume
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Uploaded</span>
+                                </a>
+                                <a href="#generated-cv-panel" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-bs-toggle="tab">
+                                    <div>
+                                        <i class="fas fa-file-alt me-2"></i> Generated CV - Marketing
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">New</span>
+                                </a>
+                                <a href="#cover-letter-panel" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-bs-toggle="tab">
+                                    <div>
+                                        <i class="fas fa-envelope-open-text me-2"></i> Cover Letter - Marketing
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">New</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="p-3 border-top mt-auto">
+                            <button class="btn btn-primary w-100" id="upload-document-btn">
+                                <i class="fas fa-upload me-2"></i> Upload New CV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Canvas - Document Editor -->
+            <div class="col-lg-6 col-md-8 editor-column">
+                <div class="editor-wrapper shadow-sm rounded-custom bg-white">
+                    <div class="editor-header p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <!-- Document tabs -->
+                        <ul class="nav nav-tabs border-bottom-0 mb-0">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#cv-tab">Resume/CV</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#cover-letter-tab">Cover Letter</a>
+                            </li>
+                        </ul>
+
+                        <!-- Editor Actions -->
+                        <div class="editor-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <div class="btn-group ms-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-print me-2"></i> Print</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-share-alt me-2"></i> Share</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-trash-alt me-2"></i> Delete</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content">
+                        <!-- CV Tab Content -->
+                        <div class="tab-pane fade show active" id="cv-tab">
+                            <div class="editor-toolbar p-2 border-bottom bg-light">
+                                <div class="btn-toolbar" role="toolbar">
+                                    <div class="btn-group me-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-bold"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-italic"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-underline"></i></button>
+                                    </div>
+                                    <div class="btn-group me-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-left"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-center"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-right"></i></button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ol"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="editor-content" id="cv-editor" contenteditable="true">
+                                <!-- Sample CV Content - Will be replaced by actual CV or AI-generated content -->
+                                <div class="document-content">
+                                    <h1 class="text-center mb-4">John Smith</h1>
+                                    <p class="text-center mb-3">New York, NY | (555) 123-4567 | john.smith@email.com | linkedin.com/in/johnsmith</p>
+                                    
+                                    <h2 class="mt-4 border-bottom pb-2">Professional Summary</h2>
+                                    <p>Experienced marketing professional with over 6 years of expertise in digital marketing strategies, campaign management, and brand development. Proven track record of increasing engagement and driving conversion rates through innovative marketing approaches.</p>
+                                    
+                                    <h2 class="mt-4 border-bottom pb-2">Experience</h2>
+                                    <div class="mb-3">
+                                        <h3>Senior Marketing Specialist</h3>
+                                        <p class="mb-1"><strong>Global Marketing Solutions</strong> | New York, NY | Jan 2020 - Present</p>
+                                        <ul>
+                                            <li>Developed and implemented comprehensive digital marketing strategies resulting in 35% increase in online engagement</li>
+                                            <li>Managed social media campaigns across multiple platforms, achieving 45% growth in audience reach</li>
+                                            <li>Collaborated with design team to create compelling brand content and visual assets</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h3>Marketing Coordinator</h3>
+                                        <p class="mb-1"><strong>Marketing Innovators Inc.</strong> | Boston, MA | Mar 2017 - Dec 2019</p>
+                                        <ul>
+                                            <li>Assisted in the execution of marketing campaigns across digital and traditional channels</li>
+                                            <li>Conducted market research and competitive analysis to identify new market opportunities</li>
+                                            <li>Managed content calendar and coordinated with stakeholders to ensure timely delivery</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <h2 class="mt-4 border-bottom pb-2">Education</h2>
+                                    <p><strong>Bachelor of Science in Marketing</strong><br>
+                                    Boston University | Boston, MA | Graduated May 2017</p>
+                                    
+                                    <h2 class="mt-4 border-bottom pb-2">Skills</h2>
+                                    <div class="skills-list row">
+                                        <div class="col-md-6"><span>Digital Marketing</span></div>
+                                        <div class="col-md-6"><span>Social Media Management</span></div>
+                                        <div class="col-md-6"><span>Content Creation</span></div>
+                                        <div class="col-md-6"><span>SEO/SEM</span></div>
+                                        <div class="col-md-6"><span>Google Analytics</span></div>
+                                        <div class="col-md-6"><span>Project Management</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cover Letter Tab Content -->
+                        <div class="tab-pane fade" id="cover-letter-tab">
+                            <div class="editor-toolbar p-2 border-bottom bg-light">
+                                <div class="btn-toolbar" role="toolbar">
+                                    <div class="btn-group me-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-bold"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-italic"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-underline"></i></button>
+                                    </div>
+                                    <div class="btn-group me-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-left"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-center"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-right"></i></button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ol"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="editor-content" id="cover-letter-editor" contenteditable="true">
+                                <!-- Sample Cover Letter Content - Will be replaced by AI-generated content -->
+                                <div class="document-content">
+                                    <div class="sender-info mb-4">
+                                        <p>John Smith<br>
+                                        123 Main Street<br>
+                                        New York, NY 10001<br>
+                                        (555) 123-4567<br>
+                                        john.smith@email.com</p>
+                                    </div>
+                                    
+                                    <div class="date mb-4">
+                                        <p>April 22, 2025</p>
+                                    </div>
+                                    
+                                    <div class="recipient-info mb-4">
+                                        <p>Hiring Manager<br>
+                                        Digital Marketing Agency<br>
+                                        456 Business Avenue<br>
+                                        New York, NY 10002</p>
+                                    </div>
+                                    
+                                    <div class="salutation mb-3">
+                                        <p>Dear Hiring Manager,</p>
+                                    </div>
+                                    
+                                    <div class="body-paragraphs">
+                                        <p>I am writing to express my interest in the Senior Digital Marketing Specialist position at Digital Marketing Agency. With over 6 years of experience in developing and implementing comprehensive marketing strategies, I am confident in my ability to contribute to your team's success.</p>
+                                        
+                                        <p>In my current role as Senior Marketing Specialist at Global Marketing Solutions, I have been responsible for developing digital marketing strategies that have resulted in a 35% increase in online engagement. I have also managed social media campaigns across multiple platforms, achieving a 45% growth in audience reach. My experience aligns perfectly with the requirements outlined in your job posting.</p>
+                                        
+                                        <p>What particularly excites me about Digital Marketing Agency is your innovative approach to creating data-driven marketing solutions for clients across various industries. I am eager to bring my expertise in digital marketing, content creation, and analytics to contribute to your company's continued success.</p>
+                                        
+                                        <p>I would welcome the opportunity to discuss how my background, skills, and accomplishments would benefit Digital Marketing Agency. Thank you for considering my application, and I look forward to speaking with you soon.</p>
+                                    </div>
+                                    
+                                    <div class="closing mt-4">
+                                        <p>Sincerely,</p>
+                                        <p class="mt-4">John Smith</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Job Matching Panel -->
+            <div class="col-lg-3 d-none d-lg-block job-panel-column">
+                <div class="panel-wrapper shadow-sm rounded-custom bg-white">
+                    <div class="panel-header p-3 border-bottom">
+                        <h5 class="mb-0">Matching Jobs</h5>
+                    </div>
+                    <div class="panel-body">
+                        <div class="job-list">
+                            <div class="list-group list-group-flush">
+                                <a href="#" class="list-group-item list-group-item-action p-3">
+                                    <h6 class="mb-1">Senior Marketing Specialist</h6>
+                                    <p class="mb-1 small">Digital Marketing Agency</p>
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span><i class="fas fa-map-marker-alt me-1"></i> New York, NY</span>
+                                        <span class="badge bg-success">95% Match</span>
+                                    </div>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action p-3">
+                                    <h6 class="mb-1">Digital Marketing Manager</h6>
+                                    <p class="mb-1 small">Global Brands Inc.</p>
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span><i class="fas fa-map-marker-alt me-1"></i> Remote</span>
+                                        <span class="badge bg-primary">87% Match</span>
+                                    </div>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action p-3">
+                                    <h6 class="mb-1">Content Marketing Specialist</h6>
+                                    <p class="mb-1 small">Tech Innovators Ltd.</p>
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span><i class="fas fa-map-marker-alt me-1"></i> Boston, MA</span>
+                                        <span class="badge bg-primary">82% Match</span>
+                                    </div>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action p-3">
+                                    <h6 class="mb-1">Social Media Strategist</h6>
+                                    <p class="mb-1 small">Creative Solutions Co.</p>
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span><i class="fas fa-map-marker-alt me-1"></i> San Francisco, CA</span>
+                                        <span class="badge bg-primary">78% Match</span>
+                                    </div>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action p-3">
+                                    <h6 class="mb-1">Marketing Coordinator</h6>
+                                    <p class="mb-1 small">Future Media Group</p>
+                                    <div class="d-flex justify-content-between align-items-center small">
+                                        <span><i class="fas fa-map-marker-alt me-1"></i> Chicago, IL</span>
+                                        <span class="badge bg-secondary">65% Match</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="p-3 border-top mt-auto">
+                            <button class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search me-2"></i> Find More Jobs
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Editor section end -->
+
+<!-- Action button section start -->
+<section class="action-button-section">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-9 offset-lg-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button class="btn btn-outline-secondary me-3">
+                            <i class="fas fa-save me-2"></i> Save Draft
+                        </button>
+                        <button class="btn btn-outline-primary">
+                            <i class="fas fa-magic me-2"></i> AI Suggestions
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i> Apply for Job
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Action button section end -->
+{% endblock %}
+
+{% include 'footer.html' %}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Meta tags -->
+    <meta name="description" content="Jobha - AI-powered job hunting assistant that helps you find the right job and create tailored CVs and cover letters">
+    <meta name="author" content="Jobha">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', path='/img/favicon.png') }}" type="image/png" sizes="16x16">
+    
+    <!-- Title -->
+    <title>{% block title %}Jobha - AI-Powered Job Agent{% endblock %}</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/custom.css') }}">
+    
+    <!-- Font Awesome (for icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Editor specific styles -->
+    {% if request.url.path == '/editor' %}
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/editor.css') }}">
+    {% endif %}
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="preloader-wrap">
+            <img src="{{ url_for('static', path='/img/favicon.png') }}" alt="logo" class="img-fluid preloader-icon" />
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+    
+    <!-- Main wrapper -->
+    <div class="main-wrapper">
+        <!-- Header section -->
+        <header class="main-header position-absolute w-100">
+            <nav class="navbar navbar-expand-xl navbar-dark sticky-header z-10">
+                <div class="container d-flex align-items-center justify-content-lg-between position-relative">
+                    <a href="/" class="navbar-brand d-flex align-items-center mb-md-0 text-decoration-none">
+                        <img src="{{ url_for('static', path='/img/logo-white.png') }}" alt="Jobha" class="img-fluid logo-white" />
+                        <img src="{{ url_for('static', path='/img/logo-color.png') }}" alt="Jobha" class="img-fluid logo-color" />
+                    </a>
+                    <a class="navbar-toggler position-absolute right-0 border-0" href="#offcanvasWithBackdrop">
+                        <span class="far fa-bars" data-bs-target="#offcanvasWithBackdrop" aria-controls="offcanvasWithBackdrop"
+                            data-bs-toggle="offcanvas" role="button"></span>
+                    </a>
+                    <div class="clearfix"></div>
+                    <div class="collapse navbar-collapse justify-content-center">
+                        <ul class="nav col-12 col-md-auto justify-content-center main-menu">
+                            <li><a href="/" class="nav-link">Home</a></li>
+                            <li><a href="/features" class="nav-link">Features</a></li>
+                            <li><a href="/how-it-works" class="nav-link">How It Works</a></li>
+                            <li><a href="/pricing" class="nav-link">Pricing</a></li>
+                            <li><a href="/contact" class="nav-link">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="action-btns text-end me-5 me-lg-0 d-none d-md-block d-lg-block">
+                        <a href="/login" class="btn btn-link text-decoration-none me-2">Sign In</a>
+                        <a href="/editor" class="btn btn-primary">Get Started</a>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Mobile menu -->
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasWithBackdrop">
+                <div class="offcanvas-header d-flex align-items-center mt-4">
+                    <a href="/" class="d-flex align-items-center mb-md-0 text-decoration-none">
+                        <img src="{{ url_for('static', path='/img/logo-color.png') }}" alt="Jobha" class="img-fluid ps-2" />
+                    </a>
+                    <button type="button" class="close-btn text-danger" data-bs-dismiss="offcanvas" aria-label="Close">
+                        <i class="far fa-close"></i>
+                    </button>
+                </div>
+                <div class="offcanvas-body z-10">
+                    <ul class="nav col-12 col-md-auto justify-content-center main-menu">
+                        <li><a href="/" class="nav-link">Home</a></li>
+                        <li><a href="/features" class="nav-link">Features</a></li>
+                        <li><a href="/how-it-works" class="nav-link">How It Works</a></li>
+                        <li><a href="/pricing" class="nav-link">Pricing</a></li>
+                        <li><a href="/contact" class="nav-link">Contact</a></li>
+                    </ul>
+                    <div class="action-btns mt-4 ps-3">
+                        <a href="/login" class="btn btn-outline-primary me-2">Sign In</a>
+                        <a href="/editor" class="btn btn-primary">Get Started</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Content block -->
+        {% block content %}{% endblock %}

@@ -1,0 +1,108 @@
+<!-- Footer section start -->
+        <footer class="footer-section">
+            <!-- Footer top start -->
+            <div class="footer-top footer-light ptb-120">
+                <div class="container">
+                    <div class="row justify-content-between">
+                        <div class="col-md-8 col-lg-4 mb-md-4 mb-lg-0">
+                            <div class="footer-single-col">
+                                <div class="footer-single-col mb-4">
+                                    <img src="{{ url_for('static', path='/img/logo-color.png') }}" alt="Jobha" class="img-fluid">
+                                </div>
+                                <p>Your AI-powered job hunting assistant. Let us help you find your dream job with tailored CVs and cover letters.</p>
+                                <form class="newsletter-form position-relative d-block d-lg-flex d-md-flex">
+                                    <input type="email" class="input-newsletter form-control me-2" placeholder="Enter your email" name="email" required autocomplete="off">
+                                    <input type="submit" value="Subscribe" data-wait="Please wait..." class="btn btn-primary mt-3 mt-lg-0 mt-md-0">
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-lg-7 mt-4 mt-md-0 mt-lg-0">
+                            <div class="row">
+                                <div class="col-md-4 col-lg-4 mt-4 mt-md-0 mt-lg-0">
+                                    <div class="footer-single-col">
+                                        <h3>Navigation</h3>
+                                        <ul class="list-unstyled footer-nav-list mb-lg-0">
+                                            <li><a href="/" class="text-decoration-none">Home</a></li>
+                                            <li><a href="/features" class="text-decoration-none">Features</a></li>
+                                            <li><a href="/how-it-works" class="text-decoration-none">How It Works</a></li>
+                                            <li><a href="/pricing" class="text-decoration-none">Pricing</a></li>
+                                            <li><a href="/contact" class="text-decoration-none">Contact</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-4 mt-4 mt-md-0 mt-lg-0">
+                                    <div class="footer-single-col">
+                                        <h3>Resources</h3>
+                                        <ul class="list-unstyled footer-nav-list mb-lg-0">
+                                            <li><a href="/blog" class="text-decoration-none">Blog</a></li>
+                                            <li><a href="/faq" class="text-decoration-none">FAQ</a></li>
+                                            <li><a href="/testimonials" class="text-decoration-none">Testimonials</a></li>
+                                            <li><a href="/support" class="text-decoration-none">Support</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-4 mt-4 mt-md-0 mt-lg-0">
+                                    <div class="footer-single-col">
+                                        <h3>Legal</h3>
+                                        <ul class="list-unstyled footer-nav-list mb-lg-0">
+                                            <li><a href="/privacy-policy" class="text-decoration-none">Privacy Policy</a></li>
+                                            <li><a href="/terms-of-service" class="text-decoration-none">Terms of Service</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer top end -->
+
+            <!-- Footer bottom start -->
+            <div class="footer-bottom footer-light py-4">
+                <div class="container">
+                    <div class="row justify-content-between align-items-center">
+                        <div class="col-md-7 col-lg-7">
+                            <div class="copyright-text">
+                                <p class="mb-lg-0 mb-md-0">© 2025 Jobha. All rights reserved.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-lg-4">
+                            <div class="footer-single-col text-start text-lg-end text-md-end">
+                                <ul class="list-unstyled list-inline footer-social-list mb-0">
+                                    <li class="list-inline-item"><a href="#"><i class="fab fa-facebook-f"></i></a></li>
+                                    <li class="list-inline-item"><a href="#"><i class="fab fa-twitter"></i></a></li>
+                                    <li class="list-inline-item"><a href="#"><i class="fab fa-linkedin-in"></i></a></li>
+                                    <li class="list-inline-item"><a href="#"><i class="fab fa-instagram"></i></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer bottom end -->
+        </footer>
+        <!-- Footer section end -->
+    </div>
+    <!-- End of main wrapper -->
+
+    <!-- JavaScript dependencies -->
+    <script src="{{ url_for('static', path='/js/vendors/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/vendors/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/vendors/swiper-bundle.min.js') }}"></script>
+    
+    <!-- Optional JS based on page needs -->
+    <script src="{{ url_for('static', path='/js/vendors/jquery.magnific-popup.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/vendors/parallax.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/vendors/aos.js') }}"></script>
+    
+    <!-- Main app JS -->
+    <script src="{{ url_for('static', path='/js/app.js') }}"></script>
+    
+    <!-- Editor specific JS -->
+    {% if request.url.path == '/editor' %}
+    <script src="{{ url_for('static', path='/js/editor.js') }}"></script>
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

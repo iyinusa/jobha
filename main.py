@@ -1,14 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 from dotenv import load_dotenv
+import pathlib
 
 # Import routers
 from routers.jobs import router as jobs_router
-from routers.users import router as users_router
 from routers.cv import router as cv_router
 
 # Load environment variables
@@ -32,21 +32,37 @@ app.add_middleware(
 
 # Include routers
 app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
-app.include_router(users_router, prefix="/api/users", tags=["Users"])
 app.include_router(cv_router, prefix="/api/cv", tags=["CV & Cover Letter"])
 
-# Create a directory for static files if it doesn't exist
-os.makedirs("static", exist_ok=True)
+# Define base directory
+BASE_DIR = pathlib.Path(__file__).resolve().parent
+
+# Create directories for static files and templates if they don't exist
+os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "templates"), exist_ok=True)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
-@app.get("/", tags=["Health Check"])
+# Setup templates
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+@app.get("/", response_class=HTMLResponse, tags=["Pages"])
+async def home_page(request: Request):
+    """Render the landing page"""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/editor", response_class=HTMLResponse, tags=["Pages"])
+async def document_editor(request: Request):
+    """Render the CV and Cover Letter editor page"""
+    return templates.TemplateResponse("editor.html", {"request": request})
+
+@app.get("/api", tags=["Health Check"])
 async def root():
     """Health check endpoint to verify the API is running properly"""
     return {
         "status": "healthy",
-        "service": "Jobha Job Agent API",
+        "service": "Jobha - Job Hunt Agent API",
         "version": "1.0.0"
     }
 

@@ -1,0 +1,344 @@
+{% include 'header.html' %}
+
+{% block content %}
+<!-- Hero section start -->
+<section class="hero-section ptb-120 bg-dark text-white" style="background: url('{{ url_for('static', path='/img/shape/dot-dot-wave-shape.svg') }}')no-repeat bottom left">
+    <div class="container">
+        <div class="row align-items-center justify-content-lg-between">
+            <div class="col-xl-5 col-lg-5">
+                <div class="hero-content-wrap text-center text-xl-start text-lg-start mt-5 mt-lg-0 mt-xl-0" data-aos="fade-up">
+                    <h1 class="fw-bold display-5">Find Your Dream Job with AI</h1>
+                    <p class="lead">Let our AI agent match your skills with the perfect job, optimize your CV, and generate personalized cover letters.</p>
+                    <div class="hero-subscribe-form-wrap pt-4 position-relative m-auto m-xl-0 d-none d-md-block d-lg-block d-xl-block">
+                        <form id="subscribe-form" name="email-form" class="hero-subscribe-form d-block d-lg-flex d-md-flex">
+                            <input type="email" class="form-control me-2" name="Email" data-name="Email" placeholder="Enter Your Email Address" id="email-address" required="">
+                            <input type="submit" value="Get Started" data-wait="Please wait..." class="btn btn-primary mt-3 mt-lg-0 mt-md-0">
+                        </form>
+                        <ul class="nav subscribe-feature-list mt-3 justify-content-lg-start justify-content-md-center">
+                            <li class="nav-item">
+                                <span class="ms-0"><i class="far fa-check-circle text-primary me-2"></i>Free CV analysis</span>
+                            </li>
+                            <li class="nav-item">
+                                <span><i class="far fa-check-circle text-primary me-2"></i>No credit card required</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6 col-lg-6 mt-lg-5 mt-4">
+                <div class="hero-img-wrap position-relative" data-aos="fade-up">
+                    <div class="hero-screen-wrap">
+                        <div class="phone-screen">
+                            <img src="{{ url_for('static', path='/img/screen/job-search-mobile.png') }}" alt="Job search on mobile" class="position-relative img-fluid">
+                        </div>
+                        <div class="mac-screen">
+                            <img src="{{ url_for('static', path='/img/screen/job-search-desktop.png') }}" alt="Job search dashboard" class="position-relative img-fluid rounded-custom">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Hero section end -->
+
+<!-- Trusted by section start -->
+<div class="customer-section pb-120 bg-dark">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-12">
+                <ul class="customer-logos-grid text-center list-unstyled mb-0">
+                    <li>
+                        <img src="{{ url_for('static', path='/img/clients/linkedin.svg.png') }}" width="150" alt="LinkedIn" class="img-fluid customer-logo p-1 p-md-2 p-lg-3 m-auto" data-aos="fade-up" data-aos-delay="50">
+                    </li>
+                    <li>
+                        <img src="{{ url_for('static', path='/img/clients/indeed.svg') }}" width="150" alt="Indeed" class="img-fluid customer-logo p-1 p-md-2 p-lg-3 m-auto" data-aos="fade-up" data-aos-delay="50">
+                    </li>
+                    <li>
+                        <img src="{{ url_for('static', path='/img/clients/monster.svg') }}" width="150" alt="Monster" class="img-fluid customer-logo p-1 p-md-2 p-lg-3 m-auto" data-aos="fade-up" data-aos-delay="50">
+                    </li>
+                    <li>
+                        <img src="{{ url_for('static', path='/img/clients/glassdoor.svg') }}" width="150" alt="Glassdoor" class="img-fluid customer-logo p-1 p-md-2 p-lg-3 m-auto" data-aos="fade-up" data-aos-delay="50">
+                    </li>
+                </ul>
+                <p class="text-center mt-lg-5 mt-4 mb-0 text-white" data-aos="fade-up" data-aos-delay="200">Connecting with top job sites to find the perfect match for your skills</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Trusted by section end -->
+
+<!-- Feature highlight section start -->
+<section class="promo-section ptb-120">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-6">
+                <div class="section-heading text-center" data-aos="fade-up">
+                    <h2>Your AI-Powered Job Hunt Assistant</h2>
+                    <p>Jobha leverages artificial intelligence to streamline your job search process and increase your chances of landing your dream job.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-lg-4">
+                <div class="promo-card-wrap promo-border-hover border border-2 bg-white rounded-custom p-5 mb-4 mb-lg-0 mb-md-4" data-aos="fade-up" data-aos-delay="50">
+                    <div class="promo-card-info">
+                        <h3 class="display-5 fw-medium mb-4"><i class="fas fa-search text-primary"></i></h3>
+                        <h2 class="h5">Smart Job Matching</h2>
+                        <p class="mb-0">Our AI engine searches multiple job sites and matches positions to your specific skills and experience.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="promo-card-wrap promo-border-hover border border-2 bg-white rounded-custom p-5 mb-4 mb-lg-0 mb-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="promo-card-info">
+                        <h3 class="display-5 fw-medium mb-4"><i class="fas fa-file-alt text-primary"></i></h3>
+                        <h2 class="h5">CV Optimization</h2>
+                        <p class="mb-0">Get personalized suggestions to tailor your CV for specific job applications and stand out from the crowd.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="promo-card-wrap promo-border-hover border border-2 bg-white rounded-custom p-5 mb-4 mb-lg-0 mb-md-0" data-aos="fade-up" data-aos-delay="150">
+                    <div class="promo-card-info">
+                        <h3 class="display-5 fw-medium mb-4"><i class="fas fa-envelope-open-text text-primary"></i></h3>
+                        <h2 class="h5">Cover Letter Generator</h2>
+                        <p class="mb-0">Create customized cover letters that highlight your relevant skills and experience for each application.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Feature highlight section end -->
+
+<!-- How it works section start -->
+<section class="feature-section-two pt-60 pb-120 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-10">
+                <div class="section-heading text-center" data-aos="fade-up">
+                    <h4 class="h5 text-primary">How It Works</h4>
+                    <h2>Land Your Dream Job in Three Simple Steps</h2>
+                    <p>Our AI-powered job agent streamlines your job search process, saving you time and increasing your chances of success.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row d-flex align-items-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="process-card text-center px-4 py-lg-5 py-4 rounded-custom shadow-hover mb-3 mb-lg-0" data-aos="fade-up" data-aos-delay="50">
+                    <div class="process-icon border border-light bg-custom-light rounded-custom p-3">
+                        <span class="h2 mb-0 text-primary fw-bold">1</span>
+                    </div>
+                    <h3 class="h5">Upload Your CV</h3>
+                    <p class="mb-0">Upload your existing resume and let our AI analyze your skills and experience.</p>
+                </div>
+            </div>
+            <div class="dots-line first"></div>
+            <div class="col-md-6 col-lg-4">
+                <div class="process-card text-center px-4 py-lg-5 py-4 rounded-custom shadow-hover mb-3 mb-lg-0" data-aos="fade-up" data-aos-delay="100">
+                    <div class="process-icon border border-light bg-custom-light rounded-custom p-3">
+                        <span class="h2 mb-0 text-primary fw-bold">2</span>
+                    </div>
+                    <h3 class="h5">Discover Matching Jobs</h3>
+                    <p class="mb-0">Our AI searches top job sites to find positions matching your skills and desired role.</p>
+                </div>
+            </div>
+            <div class="dots-line first"></div>
+            <div class="col-md-6 col-lg-4">
+                <div class="process-card text-center px-4 py-lg-5 py-4 rounded-custom shadow-hover mb-3 mb-lg-0 mb-md-0" data-aos="fade-up" data-aos-delay="150">
+                    <div class="process-icon border border-light bg-custom-light rounded-custom p-3">
+                        <span class="h2 mb-0 text-primary fw-bold">3</span>
+                    </div>
+                    <h3 class="h5">Apply with Confidence</h3>
+                    <p class="mb-0">Get a tailored CV and cover letter optimized for each specific job application.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- How it works section end -->
+
+<!-- Feature details section start -->
+<section class="feature-section pt-60 pb-120">
+    <div class="container">
+        <div class="row align-items-lg-center justify-content-between">
+            <div class="col-lg-5 order-lg-2 mb-7 mb-lg-0">
+                <div class="mb-4" data-aos="fade-up">
+                    <h2>Smart Job Matching Technology</h2>
+                    <p>Our advanced AI engine analyzes your skills and experience to find the most relevant job opportunities across multiple platforms.</p>
+                </div>
+                <ul class="list-unstyled d-flex flex-wrap list-two-col mt-5" data-aos="fade-up" data-aos-delay="50">
+                    <li>
+                        <span class="d-block mb-4"><i class="fal fa-chart-network fa-2x text-primary"></i></span>
+                        <h3 class="h5">Skills Analysis</h3>
+                        <p>Automatic identification of your key skills and experience from your CV.</p>
+                    </li>
+                    <li>
+                        <span class="d-block mb-4"><i class="fal fa-bell fa-2x text-primary"></i></span>
+                        <h3 class="h5">Instant Notifications</h3>
+                        <p>Get alerts when new jobs matching your criteria are posted.</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-6 order-lg-1">
+                <div class="pr-lg-4">
+                    <div class="bg-light text-center rounded-custom overflow-hidden p-lg-5 p-3 mx-lg-auto" data-aos="fade-up" data-aos-delay="50">
+                        <img src="{{ url_for('static', path='/img/dashboard-job-matching.png') }}" alt="Job Matching Dashboard" class="img-fluid">
+                        <div class="position-absolute bg-primary-dark z--1 dot-mask dm-size-16 dm-wh-350 top--40 left--40 top-left"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Feature details section end -->
+
+<!-- CV optimization section start -->
+<section class="feature-section pt-60 pb-120 bg-light">
+    <div class="container">
+        <div class="row align-items-lg-center justify-content-between">
+            <div class="col-lg-5 mb-7 mb-lg-0">
+                <div class="mb-4" data-aos="fade-up">
+                    <h2>CV Optimization & Cover Letter Generation</h2>
+                    <p>Stand out from other applicants with a professionally tailored CV and personalized cover letter for each job application.</p>
+                </div>
+                <ul class="list-unstyled d-flex flex-wrap list-two-col mt-5" data-aos="fade-up" data-aos-delay="50">
+                    <li>
+                        <span class="d-block mb-4"><i class="fal fa-file-edit fa-2x text-primary"></i></span>
+                        <h3 class="h5">Tailored Content</h3>
+                        <p>Customize your CV to highlight relevant skills for each position.</p>
+                    </li>
+                    <li>
+                        <span class="d-block mb-4"><i class="fal fa-magic fa-2x text-primary"></i></span>
+                        <h3 class="h5">AI-Powered</h3>
+                        <p>Advanced AI ensures your applications are optimized for applicant tracking systems.</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <div class="pr-lg-4">
+                    <div class="bg-white text-center rounded-custom overflow-hidden p-lg-5 p-3 mx-lg-auto" data-aos="fade-up" data-aos-delay="50">
+                        <img src="{{ url_for('static', path='/img/cv-optimization.png') }}" alt="CV Optimization" class="img-fluid">
+                        <div class="position-absolute bg-primary-dark z--1 dot-mask dm-size-16 dm-wh-350 bottom--40 right--40 bottom-right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- CV optimization section end -->
+
+<!-- Testimonial section start -->
+<section class="testimonial-section ptb-120">
+    <div class="container">
+        <div class="row justify-content-center align-content-center">
+            <div class="col-md-10 col-lg-6">
+                <div class="section-heading text-center" data-aos="fade-up">
+                    <h4 class="h5 text-primary">Testimonials</h4>
+                    <h2>What Job Seekers Say About Jobha</h2>
+                    <p>Hear from users who have successfully found their dream jobs with the help of our AI-powered job agent.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="position-relative w-100" data-aos="fade-up" data-aos-delay="50">
+                    <div class="swiper testimonialSwiper">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide">
+                                <div class="border border-2 p-5 rounded-custom position-relative">
+                                    <img src="{{ url_for('static', path='/img/testimonial/quotes-dot.svg') }}" alt="quotes" width="100" class="img-fluid position-absolute left-0 top-0 z--1 p-3">
+                                    <div class="d-flex mb-32 align-items-center">
+                                        <img src="{{ url_for('static', path='/img/testimonial/1.jpg') }}" class="img-fluid me-3 rounded" width="60" alt="user">
+                                        <div class="author-info">
+                                            <h6 class="mb-0">John Smith</h6>
+                                            <small>Software Developer</small>
+                                        </div>
+                                    </div>
+                                    <blockquote>
+                                        <h6>Outstanding job matching technology!</h6>
+                                        Jobha helped me find a software development role that perfectly matched my skills. The CV optimization suggestions were spot-on, and I received interview requests from 3 out of 5 applications!
+                                    </blockquote>
+                                    <ul class="rating-list list-unstyled mb-0">
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="swiper-slide">
+                                <div class="border border-2 p-5 rounded-custom position-relative">
+                                    <img src="{{ url_for('static', path='/img/testimonial/quotes-dot.svg') }}" alt="quotes" width="100" class="img-fluid position-absolute left-0 top-0 z--1 p-3">
+                                    <div class="d-flex mb-32 align-items-center">
+                                        <img src="{{ url_for('static', path='/img/testimonial/2.jpg') }}" class="img-fluid me-3 rounded" width="60" alt="user">
+                                        <div class="author-info">
+                                            <h6 class="mb-0">Sarah Johnson</h6>
+                                            <small>Marketing Manager</small>
+                                        </div>
+                                    </div>
+                                    <blockquote>
+                                        <h6>Time-saving and effective!</h6>
+                                        The cover letter generator saved me hours of work. Each letter was personalized and highlighted my relevant experience perfectly. I landed my dream job within 3 weeks of using Jobha!
+                                    </blockquote>
+                                    <ul class="rating-list list-unstyled mb-0">
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                        <li class="list-inline-item"><i class="fas fa-star text-warning"></i></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="swiper-button-next"></span>
+                    <span class="swiper-button-prev"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Testimonial section end -->
+
+<!-- CTA section start -->
+<section class="cta-subscribe bg-dark text-white ptb-120 position-relative overflow-hidden">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="subscribe-info-wrap text-center position-relative z-2">
+                    <div class="section-heading" data-aos="fade-up">
+                        <h4 class="h5 text-warning">Ready to Find Your Dream Job?</h4>
+                        <h2>Start Your Free Trial Today</h2>
+                        <p>Let our AI job agent help you find the perfect job and create tailored application materials.</p>
+                    </div>
+                    <div class="form-block-banner mw-60 m-auto mt-5" data-aos="fade-up" data-aos-delay="50">
+                        <a href="/signup" class="btn btn-primary">Get Started For Free</a>
+                        <a href="/how-it-works" class="text-decoration-none d-inline-flex align-items-center watch-now-btn ms-lg-3 ms-md-3 mt-3 mt-lg-0">
+                            <i class="fas fa-play"></i> Watch Demo
+                        </a>
+                    </div>
+                    <ul class="nav justify-content-center subscribe-feature-list mt-4" data-aos="fade-up" data-aos-delay="100">
+                        <li class="nav-item">
+                            <span><i class="far fa-check-circle text-primary me-2"></i>Free 14-day trial</span>
+                        </li>
+                        <li class="nav-item">
+                            <span><i class="far fa-check-circle text-primary me-2"></i>No credit card required</span>
+                        </li>
+                        <li class="nav-item">
+                            <span><i class="far fa-check-circle text-primary me-2"></i>Cancel anytime</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="bg-circle rounded-circle circle-shape-3 position-absolute bg-dark-light left-5"></div>
+        <div class="bg-circle rounded-circle circle-shape-1 position-absolute bg-warning right-5"></div>
+    </div>
+</section>
+<!-- CTA section end -->
+{% endblock %}
+
+{% include 'footer.html' %}

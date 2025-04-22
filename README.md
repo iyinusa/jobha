@@ -15,17 +15,17 @@ Finding your dream job shouldn't be a full-time job. Let our intelligent agent s
 
 ```
 jobha/
-├── backend/               # FastAPI backend
-│   ├── routers/           # API endpoint routers
-│   ├── models/            # Database models
-│   ├── services/          # Business logic
-│   ├── schemas/           # Pydantic schemas for API
-│   └── static/            # Static files
-├── frontend/              # Frontend files
-│   ├── css/               # CSS styles
-│   ├── js/                # JavaScript files
-│   └── images/            # Images and assets
-└── .env                   # Environment variables
+├── main.py               # FastAPI application
+├── routers/              # API endpoint routers
+├── models/               # Database models
+├── services/             # Business logic
+├── schemas/              # Pydantic schemas for API
+├── static/               # Static files (CSS, JS, images, fonts)
+├── templates/            # HTML templates for UI
+├── requirements.txt      # Python dependencies
+├── Dockerfile            # Container definition
+├── docker-compose.yml    # Docker services configuration
+└── .env                  # Environment variables
 ```
 
 ## Getting Started
@@ -33,7 +33,6 @@ jobha/
 ### Prerequisites
 
 - Python 3.9+
-- Node.js (for development tools)
 - Docker and Docker Compose (for containerized deployment)
 
 ### Setup and Installation
@@ -61,18 +60,14 @@ docker-compose up
 ```
 
 The application will be available at:
-- Frontend: http://localhost:80
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
+- Web UI & API: http://localhost:80
+- API Documentation: http://localhost:80/api/docs
 
 ### Manual Setup
-
-#### Backend
 
 1. Create a virtual environment and install dependencies:
 
 ```bash
-cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -84,30 +79,21 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-#### Frontend
-
-The frontend is static HTML, CSS, and JavaScript that can be served by any web server. For development, you can use Python's built-in HTTP server:
-
-```bash
-cd frontend
-python -m http.server 8080
-```
-
-Then visit http://localhost:8080 in your browser.
+Then visit http://localhost:8000 in your browser.
 
 ## API Documentation
 
-Once the backend is running, you can access the auto-generated API documentation at:
+Once the application is running, you can access the auto-generated API documentation at:
 
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- Swagger UI: http://localhost:80/api/docs (Docker) or http://localhost:8000/api/docs (Manual)
+- ReDoc: http://localhost:80/api/redoc (Docker) or http://localhost:8000/api/redoc (Manual)
 
 ## Development Workflow
 
-1. Make changes to the backend or frontend code
+1. Make changes to the code
 2. If you're running in Docker, the changes will be automatically reflected due to volume mounting
-3. For backend changes, FastAPI's auto-reload will update the API
-4. For frontend changes, refresh your browser to see updates
+3. FastAPI's auto-reload will update both the API and the UI templates
+4. Refresh your browser to see updates
 
 ## License
 
