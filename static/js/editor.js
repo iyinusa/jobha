@@ -17,29 +17,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup delete document functionality
     setupDeleteDocument();
     
-    // Setup upload button
+    // Setup upload button from sidebar
     const uploadBtn = document.getElementById('upload-document-btn');
     if (uploadBtn) {
         uploadBtn.addEventListener('click', function() {
             // Create file input dynamically
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = '.pdf,.doc,.docx';
-            fileInput.style.display = 'none';
-            fileInput.addEventListener('change', window.DB.handleFileUpload);
-            document.body.appendChild(fileInput);
-            fileInput.click();
-            
-            // Remove after selection
-            fileInput.addEventListener('blur', function() {
-                document.body.removeChild(fileInput);
-            });
+            createAndTriggerFileInput();
         });
     }
+    
+    // Setup CV upload button from empty editor state
+    const cvUploadBtn = document.getElementById('cv-upload-btn');
+    if (cvUploadBtn) {
+        cvUploadBtn.addEventListener('click', function() {
+            // Create file input dynamically
+            createAndTriggerFileInput();
+        });
+    }
+    
+    // Setup cover letter creation button
+    // Will be created during AI agent workflow trigger
     
     // Setup AI suggestions, apply, and save buttons
     setupActionButtons();
 });
+
+// Create and trigger file input for CV upload
+function createAndTriggerFileInput() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.doc,.docx,.txt';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', window.DB.handleFileUpload.bind(window.DB));
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    
+    // Remove after selection
+    fileInput.addEventListener('blur', function() {
+        document.body.removeChild(fileInput);
+    });
+}
 
 // Show context menu for document management
 function showContextMenu(event, doc) {
@@ -258,7 +275,8 @@ function setupActionButtons() {
                     currentItem.classList.add('active');
                 }
                 
-                alert("Document saved successfully!");
+                // Show success message
+                window.DB.showToast('Success', 'Document saved successfully!');
             } else {
                 alert(result.message);
             }
@@ -332,3 +350,6 @@ function initEditorToolbar() {
         });
     });
 }
+
+// Make showContextMenu globally available
+window.showContextMenu = showContextMenu;

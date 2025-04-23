@@ -22,19 +22,17 @@
             <!-- Left Sidebar - CV/Documents Panel -->
             <div class="col-lg-3 col-md-4 panel-column">
                 <div class="panel-wrapper shadow-sm rounded-custom bg-white">
-                    <div class="panel-header p-3 border-bottom d-flex justify-content-between">
+                    <div class="panel-header p-3 border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Your Documents</h5>
+                        <button class="btn btn-outline-primary btn-sm" id="upload-document-btn">
+                            <i class="fas fa-upload"></i> Upload CV
+                        </button>
                     </div>
                     <div class="panel-body">
                         <div class="document-list">
                             <div class="list-group list-group-flush" id="document-container">
                                 <!-- Documents will be loaded from Dexie.js here -->
                             </div>
-                        </div>
-                        <div class="p-3 border-top mt-auto">
-                            <button class="btn btn-primary w-100" id="upload-document-btn">
-                                <i class="fas fa-upload me-2"></i> Upload New CV
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -84,47 +82,15 @@
                                 </div>
                             </div>
                             <div class="editor-content" id="cv-editor" contenteditable="true">
-                                <!-- Sample CV Content - Will be replaced by actual CV or AI-generated content -->
-                                <div class="document-content">
-                                    <h1 class="text-center mb-4">John Smith</h1>
-                                    <p class="text-center mb-3">New York, NY | (555) 123-4567 | john.smith@email.com | linkedin.com/in/johnsmith</p>
-                                    
-                                    <h2 class="mt-4 border-bottom pb-2">Professional Summary</h2>
-                                    <p>Experienced marketing professional with over 6 years of expertise in digital marketing strategies, campaign management, and brand development. Proven track record of increasing engagement and driving conversion rates through innovative marketing approaches.</p>
-                                    
-                                    <h2 class="mt-4 border-bottom pb-2">Experience</h2>
-                                    <div class="mb-3">
-                                        <h3>Senior Marketing Specialist</h3>
-                                        <p class="mb-1"><strong>Global Marketing Solutions</strong> | New York, NY | Jan 2020 - Present</p>
-                                        <ul>
-                                            <li>Developed and implemented comprehensive digital marketing strategies resulting in 35% increase in online engagement</li>
-                                            <li>Managed social media campaigns across multiple platforms, achieving 45% growth in audience reach</li>
-                                            <li>Collaborated with design team to create compelling brand content and visual assets</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <h3>Marketing Coordinator</h3>
-                                        <p class="mb-1"><strong>Marketing Innovators Inc.</strong> | Boston, MA | Mar 2017 - Dec 2019</p>
-                                        <ul>
-                                            <li>Assisted in the execution of marketing campaigns across digital and traditional channels</li>
-                                            <li>Conducted market research and competitive analysis to identify new market opportunities</li>
-                                            <li>Managed content calendar and coordinated with stakeholders to ensure timely delivery</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <h2 class="mt-4 border-bottom pb-2">Education</h2>
-                                    <p><strong>Bachelor of Science in Marketing</strong><br>
-                                    Boston University | Boston, MA | Graduated May 2017</p>
-                                    
-                                    <h2 class="mt-4 border-bottom pb-2">Skills</h2>
-                                    <div class="skills-list row">
-                                        <div class="col-md-6"><span>Digital Marketing</span></div>
-                                        <div class="col-md-6"><span>Social Media Management</span></div>
-                                        <div class="col-md-6"><span>Content Creation</span></div>
-                                        <div class="col-md-6"><span>SEO/SEM</span></div>
-                                        <div class="col-md-6"><span>Google Analytics</span></div>
-                                        <div class="col-md-6"><span>Project Management</span></div>
+                                <!-- Empty state shown when no document is loaded -->
+                                <div class="document-content text-center empty-editor-state">
+                                    <div class="py-5">
+                                        <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                                        <h3 class="h4">No CV Selected</h3>
+                                        <p class="text-muted mb-4">Upload a CV or create a new document using the sidebar</p>
+                                        <button class="btn btn-primary" id="cv-upload-btn">
+                                            <i class="fas fa-upload me-2"></i> Upload CV
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -151,44 +117,15 @@
                                 </div>
                             </div>
                             <div class="editor-content" id="cover-letter-editor" contenteditable="true">
-                                <!-- Sample Cover Letter Content - Will be replaced by AI-generated content -->
-                                <div class="document-content">
-                                    <div class="sender-info mb-4">
-                                        <p>John Smith<br>
-                                        123 Main Street<br>
-                                        New York, NY 10001<br>
-                                        (555) 123-4567<br>
-                                        john.smith@email.com</p>
-                                    </div>
-                                    
-                                    <div class="date mb-4">
-                                        <p>April 22, 2025</p>
-                                    </div>
-                                    
-                                    <div class="recipient-info mb-4">
-                                        <p>Hiring Manager<br>
-                                        Digital Marketing Agency<br>
-                                        456 Business Avenue<br>
-                                        New York, NY 10002</p>
-                                    </div>
-                                    
-                                    <div class="salutation mb-3">
-                                        <p>Dear Hiring Manager,</p>
-                                    </div>
-                                    
-                                    <div class="body-paragraphs">
-                                        <p>I am writing to express my interest in the Senior Digital Marketing Specialist position at Digital Marketing Agency. With over 6 years of experience in developing and implementing comprehensive marketing strategies, I am confident in my ability to contribute to your team's success.</p>
-                                        
-                                        <p>In my current role as Senior Marketing Specialist at Global Marketing Solutions, I have been responsible for developing digital marketing strategies that have resulted in a 35% increase in online engagement. I have also managed social media campaigns across multiple platforms, achieving a 45% growth in audience reach. My experience aligns perfectly with the requirements outlined in your job posting.</p>
-                                        
-                                        <p>What particularly excites me about Digital Marketing Agency is your innovative approach to creating data-driven marketing solutions for clients across various industries. I am eager to bring my expertise in digital marketing, content creation, and analytics to contribute to your company's continued success.</p>
-                                        
-                                        <p>I would welcome the opportunity to discuss how my background, skills, and accomplishments would benefit Digital Marketing Agency. Thank you for considering my application, and I look forward to speaking with you soon.</p>
-                                    </div>
-                                    
-                                    <div class="closing mt-4">
-                                        <p>Sincerely,</p>
-                                        <p class="mt-4">John Smith</p>
+                                <!-- Empty state shown when no document is loaded -->
+                                <div class="document-content text-center empty-editor-state">
+                                    <div class="py-5">
+                                        <i class="fas fa-envelope fa-4x text-muted mb-3"></i>
+                                        <h3 class="h4">No Cover Letter Selected</h3>
+                                        <p class="text-muted mb-4">Create a new cover letter or select an existing one</p>
+                                        <button class="btn btn-primary" id="create-cover-letter-btn">
+                                            <i class="fas fa-plus me-2"></i> Create Cover Letter
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -250,7 +187,7 @@
                         </div>
                         <div class="p-3 border-top mt-auto">
                             <button class="btn btn-outline-primary w-100">
-                                <i class="fas fa-search me-2"></i> Find More Jobs
+                                <i class="fas fa-search me-2"></i> Find Matching Jobs
                             </button>
                         </div>
                     </div>
@@ -333,6 +270,26 @@
     </div>
 </div>
 
+<!-- Upload Progress Modal -->
+<div class="modal fade" id="uploadProgressModal" tabindex="-1" aria-labelledby="uploadProgressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadProgressModalLabel">Uploading Document</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p id="upload-status-text">Processing your document...</p>
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Context Menu for Document Items (will be shown/positioned via JS) -->
 <div class="dropdown-menu" id="documentContextMenu">
     <a class="dropdown-item document-view" href="#"><i class="fas fa-eye me-2"></i> View</a>
@@ -345,7 +302,11 @@
 <!-- Add Dexie.js -->
 <script src="https://unpkg.com/dexie@3.2.3/dist/dexie.js"></script>
 
-<!-- Add database module first, then editor script -->
+<!-- Add PDF.js library and worker -->
+<script src="{{ url_for('static', path='/js/vendors/pdf.min.js') }}"></script>
+
+<!-- Add CV parser first, then database module, then editor script -->
+<script src="{{ url_for('static', path='/js/cv-parser.js') }}"></script>
 <script src="{{ url_for('static', path='/js/db.js') }}"></script>
 <script src="{{ url_for('static', path='/js/editor.js') }}"></script>
 {% endblock %}
