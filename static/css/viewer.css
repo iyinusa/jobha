@@ -1,0 +1,592 @@
+/* Viewer Specific Styles */
+
+/* Document Viewer Layout */
+.viewer-section {
+    min-height: 80vh;
+    padding: 20px 0;
+}
+
+.panel-column, .viewer-column, .job-panel-column {
+    height: calc(80vh - 40px);
+    margin-bottom: 20px;
+}
+
+.panel-wrapper, .viewer-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.panel-header {
+    flex-shrink: 0;
+    background-color: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 15px 20px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    background-color: #fff;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    /* Custom scrollbar for better appearance */
+    scrollbar-width: thin;
+    scrollbar-color: #ddd #f5f5f5;
+}
+
+.panel-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.panel-body::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+.panel-body::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 6px;
+}
+
+/* Document List Styling */
+.document-list .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 12px 20px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #edf2f9;
+}
+
+.document-list .list-group-item:first-child {
+    border-top: none;
+}
+
+.document-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.document-list .list-group-item.active {
+    background-color: #e9f0fd;
+    border-left: 3px solid #2c50ed;
+    color: #2c50ed;
+    font-weight: 500;
+}
+
+.document-list .list-group-item i {
+    font-size: 1.1rem;
+    margin-right: 12px;
+}
+
+/* Three-dot menu styling */
+.document-list .btn-sm.text-muted {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.document-list .list-group-item:hover .btn-sm.text-muted {
+    opacity: 1;
+}
+
+/* Viewer Content Styles */
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    height: 100%;
+}
+
+.tab-pane {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tab-pane.active {
+    display: flex;
+}
+
+.viewer-content {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f9f9f9; /* Light gray background */
+    min-height: 100%;
+    position: relative;
+    padding: 20px;
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #ddd #f5f5f5;
+}
+
+.viewer-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.viewer-content::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+.viewer-content::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 6px;
+}
+
+#cv-viewer, #cover-letter-viewer {
+    outline: none;
+    min-height: 100%;
+    padding: 0;
+    overflow-y: auto;
+}
+
+.document-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px;
+    background-color: #ffffff;
+    min-height: calc(100% - 40px);
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    border: 1px solid #edf2f9;
+    position: relative;
+    overflow: hidden; /* Prevents content overflow */
+}
+
+/* PDF Viewer Styles - Enhanced */
+.pdf-viewer-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.pdf-controls {
+    padding: 12px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #edf2f9;
+    z-index: 2;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pdf-pages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f0f0;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd #f0f0f0;
+}
+
+.pdf-pages-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.pdf-pages-container::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.pdf-pages-container::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 4px;
+}
+
+.pdf-page {
+    margin-bottom: 30px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    border-radius: 2px;
+}
+
+/* Word Document Styles */
+.word-document-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 40px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.06);
+}
+
+/* Text Document Styles */
+.text-document {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 15px rgba(0, 0, 0, 0.06);
+    padding: 30px;
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+.text-document-content {
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: #333;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 10px;
+    background-color: #f9f9fb;
+    border-radius: 4px;
+    border: 1px solid #edf2f9;
+}
+
+/* Style for CV content */
+.document-content h1 {
+    font-size: 26px;
+    color: #333;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #edf2f9;
+}
+
+.document-content h2 {
+    font-size: 20px;
+    color: #2c50ed;
+    font-weight: 500;
+    margin-top: 2rem;
+    margin-bottom: 12px;
+}
+
+.document-content h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+.document-content ul {
+    padding-left: 20px;
+    margin-bottom: 1.5rem;
+}
+
+.document-content ul li {
+    margin-bottom: 6px;
+    line-height: 1.6;
+}
+
+.document-content p {
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.skills-list {
+    list-style-type: none;
+    padding-left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.skills-list li {
+    padding: 6px 12px;
+    background-color: #f0f4ff;
+    border-radius: 50px;
+    display: inline-block;
+    margin-bottom: 0;
+    font-size: 13px;
+    color: #2c50ed;
+    border: 1px solid #e0e7ff;
+}
+
+/* Viewer Header Styling */
+.viewer-header {
+    flex-shrink: 0;
+    background-color: #fff;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Panel Lists */
+.document-list .list-group-item, .job-list .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 12px 20px;
+    transition: background-color 0.2s ease;
+}
+
+/* Nav Tabs Styling */
+.viewer-header .nav-tabs {
+    border-bottom: none;
+}
+
+.viewer-header .nav-link {
+    border: none;
+    padding: 8px 16px;
+    font-weight: 500;
+    color: #6c757d;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.viewer-header .nav-link.active {
+    color: #2c50ed;
+    background-color: transparent;
+}
+
+.viewer-header .nav-link.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -16px;
+    height: 3px;
+    background-color: #2c50ed;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+/* Action buttons */
+.action-button-section {
+    border-top: 1px solid #e9ecef;
+    padding: 15px 0;
+    background-color: #f8f9fa;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Empty state styles */
+.empty-viewer-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
+    padding: 4rem 2rem;
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+.empty-viewer-state i {
+    color: #d1d9e6;
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.empty-viewer-state h3 {
+    color: #495057;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.empty-viewer-state p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    max-width: 300px;
+    text-align: center;
+}
+
+.empty-viewer-state .btn {
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11);
+}
+
+.empty-viewer-state .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Loading overlay */
+#loading-overlay {
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+#loading-overlay .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+#loading-overlay p {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-top: 15px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1199.98px) {
+    .job-panel-column {
+        display: none;
+    }
+    
+    .viewer-column {
+        flex: 0 0 calc(100% - 33.33%);
+        max-width: calc(100% - 33.33%);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .panel-column, .viewer-column {
+        height: auto;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .panel-wrapper, .viewer-wrapper {
+        height: auto;
+        margin-bottom: 20px;
+        max-height: none;
+    }
+    
+    .viewer-content {
+        min-height: 60vh;
+    }
+    
+    .action-button-section .row .col-lg-9 {
+        margin-left: 0;
+    }
+    
+    .action-button-section .offset-lg-3 {
+        margin-left: 0;
+    }
+}
+
+/* Context menu styling */
+#documentContextMenu {
+    z-index: 1050;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+    border: none;
+    border-radius: 6px;
+    overflow: hidden;
+    padding: 4px 0;
+    min-width: 180px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#documentContextMenu .dropdown-item {
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    transition: all 0.15s ease;
+}
+
+#documentContextMenu .dropdown-item i {
+    width: 18px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+#documentContextMenu .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #2c50ed;
+}
+
+#documentContextMenu .dropdown-item.text-danger:hover {
+    background-color: #feebee;
+    color: #dc3545;
+}
+
+#documentContextMenu .dropdown-divider {
+    margin: 4px 0;
+    border-top-color: #edf2f9;
+}
+
+/* Document Viewer Styles */
+
+/* Native content containers */
+.document-content-native {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+    background-color: #ffffff;
+    min-height: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+/* PDF specific styles */
+.native-pdf-container {
+    position: relative;
+    z-index: 10;
+    background-color: #f8f9fa;
+}
+
+.native-pdf-iframe {
+    display: block;
+}
+
+.pdf-fallback-container {
+    display: none;
+}
+
+/* Show fallback only when iframe fails */
+.native-pdf-iframe:not([src]) + .pdf-fallback-container {
+    display: block;
+}
+
+/* Viewer options bar */
+.viewer-options {
+    border-top: 1px solid #e9ecef;
+}
+
+.viewer-options .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Word document viewer */
+.word-viewer-container iframe {
+    background-color: #f8f9fa;
+}
+
+.word-fallback {
+    font-size: 0.9rem;
+}
+
+/* Enhanced PDF viewer from PDF.js */
+.pdf-viewer-element {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Metadata styling */
+.pdf-metadata {
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Loading placeholder */
+.text-content-placeholder {
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

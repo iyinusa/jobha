@@ -15,8 +15,12 @@
 </section>
 <!-- Page header section end -->
 
-<!-- Editor section start -->
-<section class="editor-section">
+<!-- Add CV template and viewer CSS -->
+<link rel="stylesheet" href="{{ url_for('static', path='/css/cv-template.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='/css/viewer.css') }}">
+
+<!-- Viewer section start -->
+<section class="viewer-section">
     <div class="container-fluid">
         <div class="row">
             <!-- Left Sidebar - CV/Documents Panel -->
@@ -31,17 +35,16 @@
                     <div class="panel-body">
                         <div class="document-list">
                             <div class="list-group list-group-flush" id="document-container">
-                                <!-- Documents will be loaded from Dexie.js here -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Middle Canvas - Document Editor -->
-            <div class="col-lg-6 col-md-8 editor-column">
-                <div class="editor-wrapper shadow-sm rounded-custom bg-white">
-                    <div class="editor-header p-3 border-bottom d-flex justify-content-between align-items-center">
+            <!-- Middle Canvas - Document Viewer -->
+            <div class="col-lg-6 col-md-8 viewer-column">
+                <div class="viewer-wrapper shadow-sm rounded-custom bg-white">
+                    <div class="viewer-header p-3 border-bottom d-flex justify-content-between align-items-center">
                         <!-- Document tabs -->
                         <ul class="nav nav-tabs border-bottom-0 mb-0">
                             <li class="nav-item">
@@ -52,9 +55,9 @@
                             </li>
                         </ul>
 
-                        <!-- Editor Actions -->
-                        <div class="editor-actions">
-                            <button class="btn btn-sm btn-outline-primary">
+                        <!-- Viewer Actions -->
+                        <div class="viewer-actions">
+                            <button class="btn btn-sm btn-outline-primary" id="download-document-btn">
                                 <i class="fas fa-download"></i> Download
                             </button>
                         </div>
@@ -63,31 +66,13 @@
                     <div class="tab-content">
                         <!-- CV Tab Content -->
                         <div class="tab-pane fade show active" id="cv-tab">
-                            <div class="editor-toolbar p-2 border-bottom bg-light">
-                                <div class="btn-toolbar" role="toolbar">
-                                    <div class="btn-group me-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-bold"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-italic"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-underline"></i></button>
-                                    </div>
-                                    <div class="btn-group me-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-left"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-center"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-right"></i></button>
-                                    </div>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ol"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="editor-content" id="cv-editor" contenteditable="true">
+                            <div class="viewer-content" id="cv-viewer">
                                 <!-- Empty state shown when no document is loaded -->
-                                <div class="document-content text-center empty-editor-state">
+                                <div class="document-content text-center empty-viewer-state">
                                     <div class="py-5">
                                         <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
                                         <h3 class="h4">No CV Selected</h3>
-                                        <p class="text-muted mb-4">Upload a CV or create a new document using the sidebar</p>
+                                        <p class="text-muted mb-4">Upload a CV or select an existing document from the sidebar</p>
                                         <button class="btn btn-primary" id="cv-upload-btn">
                                             <i class="fas fa-upload me-2"></i> Upload CV
                                         </button>
@@ -98,34 +83,13 @@
 
                         <!-- Cover Letter Tab Content -->
                         <div class="tab-pane fade" id="cover-letter-tab">
-                            <div class="editor-toolbar p-2 border-bottom bg-light">
-                                <div class="btn-toolbar" role="toolbar">
-                                    <div class="btn-group me-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-bold"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-italic"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-underline"></i></button>
-                                    </div>
-                                    <div class="btn-group me-2">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-left"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-center"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-align-right"></i></button>
-                                    </div>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ul"></i></button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary"><i class="fas fa-list-ol"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="editor-content" id="cover-letter-editor" contenteditable="true">
+                            <div class="viewer-content" id="cover-letter-viewer">
                                 <!-- Empty state shown when no document is loaded -->
-                                <div class="document-content text-center empty-editor-state">
+                                <div class="document-content text-center empty-viewer-state">
                                     <div class="py-5">
                                         <i class="fas fa-envelope fa-4x text-muted mb-3"></i>
                                         <h3 class="h4">No Cover Letter Selected</h3>
-                                        <p class="text-muted mb-4">Create a new cover letter or select an existing one</p>
-                                        <button class="btn btn-primary" id="create-cover-letter-btn">
-                                            <i class="fas fa-plus me-2"></i> Create Cover Letter
-                                        </button>
+                                        <p class="text-muted mb-4">Select an existing cover letter from the sidebar</p>
                                     </div>
                                 </div>
                             </div>
@@ -196,7 +160,7 @@
         </div>
     </div>
 </section>
-<!-- Editor section end -->
+<!-- Viewer section end -->
 
 <!-- Action button section start -->
 <section class="action-button-section">
@@ -205,11 +169,8 @@
             <div class="col-lg-9 offset-lg-3">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <button class="btn btn-outline-secondary me-3">
-                            <i class="fas fa-save me-2"></i> Save Draft
-                        </button>
                         <button class="btn btn-outline-primary">
-                            <i class="fas fa-magic me-2"></i> AI Suggestions
+                            <i class="fas fa-magic me-2"></i> AI Analysis & Suggestions
                         </button>
                     </div>
                     <div>
@@ -299,16 +260,14 @@
     <a class="dropdown-item document-delete text-danger" href="#"><i class="fas fa-trash-alt me-2"></i> Delete</a>
 </div>
 
-<!-- Add Dexie.js -->
-<script src="https://unpkg.com/dexie@3.2.3/dist/dexie.js"></script>
-
-<!-- Add PDF.js library and worker -->
+<!-- Add PDF.js for PDF rendering -->
 <script src="{{ url_for('static', path='/js/vendors/pdf.min.js') }}"></script>
+<script src="{{ url_for('static', path='/js/vendors/pdf.worker.min.js') }}"></script>
 
-<!-- Add CV parser first, then database module, then editor script -->
+<!-- Add CV parser first, then database module, then viewer script -->
 <script src="{{ url_for('static', path='/js/cv-parser.js') }}"></script>
 <script src="{{ url_for('static', path='/js/db.js') }}"></script>
-<script src="{{ url_for('static', path='/js/editor.js') }}"></script>
+<script src="{{ url_for('static', path='/js/viewer.js') }}"></script>
 {% endblock %}
 
 {% include 'footer.html' %}

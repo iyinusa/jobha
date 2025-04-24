@@ -19,6 +19,9 @@ app = FastAPI(
     title="Jobha - Job Agent API",
     description="API for Jobha - Your professional job search assistant",
     version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json"
 )
 
 # Configure CORS
@@ -31,8 +34,8 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
-app.include_router(cv_router, prefix="/api/cv", tags=["CV & Cover Letter"])
+app.include_router(jobs_router, tags=["Jobs"])
+app.include_router(cv_router, tags=["CV & Cover Letter"])
 
 # Define base directory
 BASE_DIR = pathlib.Path(__file__).resolve().parent

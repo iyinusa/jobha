@@ -71,33 +71,56 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Style for CV content */
-.document-content h1 {
+/* Separate styling for document metadata vs original content */
+.document-metadata-container {
+    margin-bottom: 30px;
+}
+
+.document-metadata-container h1 {
+    font-size: 24px;
+    color: #333;
+    font-weight: 700;
+    margin-top: 0;
+}
+
+/* Container for preserving original document formatting */
+.original-document-content {
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* Style metadata section but don't affect original content */
+.document-metadata {
+    margin-bottom: 1.5rem;
+}
+
+.document-metadata h1 {
     font-size: 24px;
     color: #333;
     font-weight: 700;
     margin-top: 0; /* Remove default margin to prevent overlap */
 }
 
-.document-content h2 {
+/* These styles will only apply to .document-content elements that don't contain .original-document-content */
+.document-content:not(:has(.original-document-content)) h2 {
     font-size: 18px;
     color: #2c50ed;
     font-weight: 600;
     margin-top: 1.5rem; /* Consistent spacing */
 }
 
-.document-content h3 {
+.document-content:not(:has(.original-document-content)) h3 {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 4px;
 }
 
-.document-content ul {
+.document-content:not(:has(.original-document-content)) ul {
     padding-left: 20px;
     margin-bottom: 1rem; /* Consistent spacing */
 }
 
-.document-content ul li {
+.document-content:not(:has(.original-document-content)) ul li {
     margin-bottom: 4px;
 }
 
@@ -231,6 +254,34 @@
     color: #6c757d;
     padding: 2rem 1rem;
     font-style: italic;
+}
+
+/* Document context menu styling */
+#documentContextMenu {
+    min-width: 200px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 6px;
+    z-index: 10000; /* Ensure menu appears above other elements */
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+#documentContextMenu .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+#documentContextMenu .dropdown-item:hover {
+    background-color: #f0f4ff;
+}
+
+#documentContextMenu .dropdown-item.text-danger:hover {
+    background-color: #fff1f1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive Adjustments */

@@ -60,12 +60,29 @@ function createAndTriggerFileInput() {
 
 // Show context menu for document management
 function showContextMenu(event, doc) {
-    const menu = document.getElementById('documentContextMenu');
+    event.preventDefault();
+    event.stopPropagation();
     
-    // Position the menu at the mouse position
+    const menu = document.getElementById('documentContextMenu');
+    const button = event.currentTarget; // The 3-dot button that was clicked
+    
+    // Get the button's position
+    const buttonRect = button.getBoundingClientRect();
+    
+    // Position the menu next to the button
     menu.style.display = 'block';
-    menu.style.left = event.pageX + 'px';
-    menu.style.top = event.pageY + 'px';
+    
+    // Adjust position calculations for better alignment with the button
+    const menuPosition = {
+        top: buttonRect.bottom + window.scrollY,
+        left: buttonRect.left + window.scrollX - 180, // Align right edge of menu to left of button
+    };
+    
+    // Position the menu using the button's position
+    menu.style.position = 'absolute';
+    menu.style.top = `${menuPosition.top}px`;
+    menu.style.left = `${menuPosition.left}px`;
+    menu.style.right = 'auto'; // Clear any previous right positioning
     
     // Store the document ID in the menu
     menu.setAttribute('data-document-id', doc.id);
@@ -142,31 +159,67 @@ function setupRenameDocument() {
     const confirmBtn = document.getElementById('confirmRenameBtn');
     if (confirmBtn) {
         confirmBtn.addEventListener('click', async function() {
-            const docId = parseInt(document.getElementById('renameDocId').value);
-            const newName = document.getElementById('newDocName').value.trim();
-            
-            if (!newName) {
-                alert('Please enter a valid name');
-                return;
-            }
-            
-            // Use the database module to rename document
-            const result = await window.DB.renameDocument(docId, newName);
-            
-            if (result.success) {
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('renameDocModal')).hide();
+            try {
+                // Get the document ID and new name
+                const docIdInput = document.getElementById('renameDocId');
+                const nameInput = document.getElementById('newDocName');
                 
-                // Reload documents
-                await window.DB.loadDocuments();
-                
-                // Keep the renamed document active
-                const renamedItem = document.querySelector(`[data-id="${docId}"]`);
-                if (renamedItem) {
-                    renamedItem.click();
+                if (!docIdInput || !docIdInput.value) {
+                    throw new Error('Document ID not found');
                 }
-            } else {
-                alert(result.message);
+                
+                // Convert ID to string to match backend expectations
+                const docId = docIdInput.value.toString();
+                const newName = nameInput.value.trim();
+                
+                if (!newName) {
+                    window.DB.showToast('Error', 'Please enter a valid name');
+                    return;
+                }
+                
+                // Show loading indicator in the modal
+                const renameModal = document.getElementById('renameDocModal');
+                const modalBody = renameModal.querySelector('.modal-body');
+                const originalContent = modalBody.innerHTML;
+                
+                // Update modal content to show loading
+                modalBody.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p>Renaming document...</p>
+                    </div>
+                `;
+                
+                // Use the database module to rename document
+                const result = await window.DB.renameDocument(docId, newName);
+                
+                if (result.success) {
+                    // Close modal
+                    bootstrap.Modal.getInstance(renameModal).hide();
+                    
+                    // Reload documents
+                    await window.DB.loadDocuments();
+                    
+                    // Keep the renamed document active and update viewer
+                    const renamedItem = document.querySelector(`[data-id="${docId}"]`);
+                    if (renamedItem) {
+                        // Make sure it's selected in the list
+                        const items = document.querySelectorAll('.list-group-item');
+                        items.forEach(item => item.classList.remove('active'));
+                        renamedItem.classList.add('active');
+                        
+                        // Reload the document to refresh the view with new name
+                        window.DB.loadDocumentById(docId);
+                    }
+                } else {
+                    // Restore original modal content
+                    modalBody.innerHTML = originalContent;
+                    window.DB.showToast('Error', result.message || 'Failed to rename document');
+                }
+            } catch (error) {
+                console.error('Error in document renaming:', error);
+                window.DB.showToast('Error', `Failed to rename document: ${error.message}`);
+                bootstrap.Modal.getInstance(document.getElementById('renameDocModal')).hide();
             }
         });
     }
@@ -192,36 +245,162 @@ function setupDeleteDocument() {
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     if (confirmBtn) {
         confirmBtn.addEventListener('click', async function() {
-            const docId = parseInt(document.getElementById('deleteDocId').value);
-            
-            // Use the database module to delete document
-            const result = await window.DB.deleteDocument(docId);
-            
-            if (result.success) {
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('deleteDocModal')).hide();
+            try {
+                // Get the document ID from the hidden input field
+                const docIdInput = document.getElementById('deleteDocId');
+                if (!docIdInput || !docIdInput.value) {
+                    throw new Error('Document ID not found');
+                }
                 
-                // Reload documents
-                await window.DB.loadDocuments();
-            } else {
-                alert(result.message);
+                // Get the document ID as a string (backend uses string IDs)
+                const docId = docIdInput.value.toString();
+                
+                // Show loading indicator
+                const deleteModal = document.getElementById('deleteDocModal');
+                const modalBody = deleteModal.querySelector('.modal-body');
+                const originalContent = modalBody.innerHTML;
+                
+                // Update modal content to show loading
+                modalBody.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p>Deleting document and associated files...</p>
+                    </div>
+                `;
+                
+                // Use the database module to delete document
+                const result = await window.DB.deleteDocument(docId);
+                
+                if (result.success) {
+                    // Close modal
+                    bootstrap.Modal.getInstance(deleteModal).hide();
+                    
+                    // Clear current document from viewer if it was the one deleted
+                    const viewerElement = document.querySelector('.viewer-wrapper');
+                    if (viewerElement && viewerElement.getAttribute('data-current-doc-id') === docId) {
+                        // Reset viewer to empty state
+                        const cvViewer = document.getElementById('cv-viewer');
+                        if (cvViewer) {
+                            cvViewer.innerHTML = `
+                                <div class="document-content text-center empty-viewer-state">
+                                    <div class="py-5">
+                                        <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                                        <h3 class="h4">No CV Selected</h3>
+                                        <p class="text-muted mb-4">Upload a CV or select an existing document from the sidebar</p>
+                                        <button class="btn btn-primary" id="cv-upload-btn">
+                                            <i class="fas fa-upload me-2"></i> Upload CV
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Re-attach event listener to upload button
+                            const cvUploadBtn = document.getElementById('cv-upload-btn');
+                            if (cvUploadBtn) {
+                                cvUploadBtn.addEventListener('click', function() {
+                                    createAndTriggerFileInput();
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Reload documents to update the sidebar list
+                    await window.DB.loadDocuments();
+                    
+                    // Show success message
+                    window.DB.showToast('Success', 'Document and associated files deleted successfully');
+                } else {
+                    // Restore original modal content
+                    modalBody.innerHTML = originalContent;
+                    
+                    // Show error message
+                    window.DB.showToast('Error', result.message || 'Failed to delete document');
+                }
+            } catch (error) {
+                console.error('Error in document deletion:', error);
+                window.DB.showToast('Error', `Failed to delete document: ${error.message}`);
+                bootstrap.Modal.getInstance(document.getElementById('deleteDocModal')).hide();
             }
         });
     }
 }
 
-// Download document as HTML
+// Download document based on type
 function downloadDocument(doc) {
-    // Create download link
-    const a = document.createElement('a');
-    const blob = new Blob([doc.content], {type: 'text/html'});
-    a.href = URL.createObjectURL(blob);
-    a.download = `${doc.name}.html`;
-    
-    // Trigger download
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+        window.DB.showLoadingState('Preparing download...');
+        
+        // Check if document has a file path (direct file download)
+        if (doc.file_path) {
+            // For files stored on server, create a link to download it
+            const filePath = doc.file_path.startsWith('uploads/') ? doc.file_path : `uploads/${doc.file_path}`;
+            const fileUrl = `/static/${filePath}`;
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = `${doc.name}${getFileExtension(doc.type)}`;
+            
+            // Trigger download
+            document.body.appendChild(a);
+            
+            setTimeout(() => {
+                a.click();
+                document.body.removeChild(a);
+                window.DB.hideLoadingState();
+                window.DB.showToast('Success', 'Download started');
+            }, 300);
+            
+            return;
+        }
+        
+        // For documents with content but no file_path (HTML content)
+        if (doc.content) {
+            // Create download link
+            const a = document.createElement('a');
+            const blob = new Blob([doc.content], {type: 'text/html'});
+            a.href = URL.createObjectURL(blob);
+            a.download = `${doc.name || 'document'}${getFileExtension(doc.type)}`;
+            
+            // Trigger download
+            document.body.appendChild(a);
+            
+            setTimeout(() => {
+                a.click();
+                document.body.removeChild(a);
+                
+                // Clean up
+                URL.revokeObjectURL(a.href);
+                
+                window.DB.hideLoadingState();
+                window.DB.showToast('Success', 'Document downloaded successfully');
+            }, 300);
+            
+            return;
+        }
+        
+        // If document has no content and no file_path
+        window.DB.hideLoadingState();
+        window.DB.showToast('Error', 'No downloadable content available');
+    } catch (error) {
+        console.error('Error downloading document:', error);
+        window.DB.hideLoadingState();
+        window.DB.showToast('Error', 'Failed to download file: ' + error.message);
+    }
+}
+
+// Helper function to get file extension based on doc type
+function getFileExtension(type) {
+    switch (type) {
+        case 'pdf':
+            return '.pdf';
+        case 'word':
+            return '.docx';
+        case 'text':
+            return '.txt';
+        default:
+            return '.html';
+    }
 }
 
 // Setup AI suggestions, apply for job, and save draft buttons

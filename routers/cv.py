@@ -1,90 +1,263 @@
-from fastapi import APIRouter, HTTPException, Body, File, UploadFile
-from typing import Optional, List
-from pydantic import BaseModel
+from fastapi import APIRouter, UploadFile, HTTPException, File, Form, Path, Body
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any, Union
+import os
+import uuid
+import json
+import logging
+from pathlib import Path as FilePath
+from datetime import datetime
 
-router = APIRouter()
+# Import database service
+from services.database.json_db import db
+from services.document_parser.parser import DocumentParser
 
-class OptimizationRequest(BaseModel):
-    cv_text: str
-    job_description: str
-    skills_to_highlight: Optional[List[str]] = None
+# Import CV analyzer
+from services.ai.cv_analyzer import CVAnalyzer
 
-class CoverLetterRequest(BaseModel):
-    job_title: str
-    company_name: str
-    job_description: str
-    candidate_experience: str
-    tone: Optional[str] = "professional"
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Create router
+router = APIRouter(
+    prefix="/api/cv",
+    tags=["cv"],
+    responses={404: {"description": "Not found"}},
+)
+
+# Upload directory
+UPLOAD_DIR = FilePath("static/uploads") 
+# Create upload directory if it doesn't exist
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Pydantic models
+class DocumentResponse(BaseModel):
+    id: str
+    name: str
+    category: str  # Document category (cv or cover-letter)
+    type: str      # File format type (pdf, word, text)
+    content: Optional[str] = None
+    file_path: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     
-@router.post("/optimize")
-async def optimize_cv(request: OptimizationRequest):
-    """
-    Optimize a CV for a specific job description
-    """
-    # In a real app, this would use NLP or OpenAI to analyze and optimize the CV
-    return {
-        "success": True,
-        "optimized_cv": "Optimized CV content would be here",
-        "recommendations": [
-            "Add more details about your Python experience",
-            "Highlight your team leadership skills",
-            "Quantify your achievements with metrics",
-            "Include relevant keywords: FastAPI, Docker, CI/CD"
-        ],
-        "match_score": 85,
-    }
-
-@router.post("/cover-letter")
-async def generate_cover_letter(request: CoverLetterRequest):
-    """
-    Generate a cover letter based on job description and candidate experience
-    """
-    # In a real app, this would use OpenAI or similar to generate the letter
-    return {
-        "success": True,
-        "cover_letter": f"""
-Dear Hiring Manager,
-
-I am writing to express my interest in the {request.job_title} position at {request.company_name}. With my background in software development and experience with relevant technologies, I believe I would be a valuable addition to your team.
-
-[Cover letter content would be dynamically generated based on job description and candidate experience]
-
-I am excited about the opportunity to contribute to {request.company_name} and would welcome the chance to discuss how my background and skills would be a good fit for your team.
-
-Sincerely,
-[Candidate Name]
-        """,
-        "tone": request.tone
-    }
-
-@router.post("/analyze-job")
-async def analyze_job_description(job_description: str = Body(...)):
-    """
-    Analyze a job description for key skills and requirements
-    """
-    # In a real app, this would use NLP to extract key information
-    return {
-        "success": True,
-        "key_skills": ["Python", "FastAPI", "Docker", "AWS"],
-        "experience_required": "3-5 years",
-        "education_required": "Bachelor's degree in Computer Science or related field",
-        "job_type": "Full-time",
-        "seniority_level": "Mid-Senior level"
-    }
-
-@router.post("/upload")
-async def upload_resume(file: UploadFile):
-    """
-    Upload a resume/CV file
-    """
-    # In a real app, this would save the file and process it
-    content = await file.read()
-    # Process the file content
+class DocumentListResponse(BaseModel):
+    success: bool
+    documents: List[Dict[str, Any]]
     
-    return {
-        "success": True,
-        "filename": file.filename,
-        "size": len(content),
-        "content_type": file.content_type,
-        "message": "Resume uploaded successfully"
-    }
+class DocumentCreateResponse(BaseModel):
+    success: bool
+    document_id: str
+    message: Optional[str] = None
+    
+class DocumentDeleteResponse(BaseModel):
+    success: bool
+    message: str
+    
+class DocumentRenameRequest(BaseModel):
+    new_name: str = Field(..., title="New document name")
+    
+class DocumentRenameResponse(BaseModel):
+    success: bool
+    document_id: str
+    message: Optional[str] = None
+    
+class FileListResponse(BaseModel):
+    success: bool
+    files: List[Dict[str, Any]]
+
+# File upload handler
+@router.post("/upload", response_model=DocumentCreateResponse)
+async def upload_cv(
+    file: UploadFile = File(...),
+    skip_parsing: bool = Form(False)
+):
+    try:
+        # Generate a unique filename
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        unique_filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = UPLOAD_DIR / unique_filename
+        
+        # Validate file type
+        allowed_extensions = ['.pdf', '.doc', '.docx', '.txt']
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported file type. Please upload one of: {', '.join(allowed_extensions)}"
+            )
+        
+        # Save file to disk
+        content = await file.read()
+        if len(content) == 0:
+            raise HTTPException(status_code=400, detail="Empty file")
+            
+        with open(file_path, "wb") as f:
+            f.write(content)
+            
+        logger.info(f"File saved to {file_path}")
+        
+        # Determine document category (CV or Cover Letter)
+        doc_category = "cv"  # Default is CV
+        if "cover" in file.filename.lower():
+            doc_category = "cover-letter"
+        
+        # Determine file format type based on extension
+        file_format = ""
+        if file_ext == ".pdf":
+            file_format = "pdf"
+        elif file_ext in [".doc", ".docx"]:
+            file_format = "word"
+        elif file_ext == ".txt":
+            file_format = "text"
+        
+        # If skip_parsing is True, just save file metadata
+        if skip_parsing:
+            document = {
+                "id": str(uuid.uuid4()),
+                "name": os.path.splitext(file.filename)[0],
+                "category": doc_category,  
+                "type": file_format,      
+                "file_path": f"uploads/{unique_filename}",
+                "content": None,
+                "modified": datetime.now().isoformat()
+            }
+            
+            # Save to database
+            document = db.add_document(document)
+            
+            # Return success response with document ID
+            return {
+                "success": True, 
+                "document_id": document["id"],
+                "message": "File uploaded successfully"
+            }
+            
+        # Parse document content
+        parser = DocumentParser()
+        content = parser.parse_document(str(file_path))
+        
+        if not content:
+            # Delete the file if parsing failed
+            os.remove(file_path)
+            raise HTTPException(status_code=400, detail="Could not parse document")
+            
+        # Create document object
+        document = {
+            "id": str(uuid.uuid4()),
+            "name": os.path.splitext(file.filename)[0],
+            "category": doc_category,  
+            "type": file_format,       
+            "content": content,
+            "file_path": f"uploads/{unique_filename}",
+            "modified": datetime.now().isoformat()
+        }
+        
+        # Save to database
+        document = db.add_document(document)
+        
+        return {
+            "success": True, 
+            "document_id": document["id"],
+            "message": "Document uploaded and parsed successfully"
+        }
+    
+    except HTTPException as e:
+        logger.error(f"HTTP Exception: {str(e.detail)}")
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"success": False, "message": str(e.detail)}
+        )
+    except Exception as e:
+        logger.error(f"Error uploading CV: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Error processing file: {str(e)}"}
+        )
+
+# Get all documents
+@router.get("/documents", response_model=DocumentListResponse)
+async def list_documents():
+    try:
+        documents = db.list_documents()
+        # Return all documents
+        return {"success": True, "documents": documents}
+    except Exception as e:
+        logger.error(f"Error listing documents: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error listing documents: {str(e)}")
+
+# Get a document by ID
+@router.get("/documents/{doc_id}", response_model=Dict[str, Any])
+async def get_document(doc_id: str = Path(..., title="Document ID")):
+    try:
+        document = db.get_document(doc_id)
+        if document is None:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+        return document
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error getting document {doc_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving document: {str(e)}")
+
+# Rename a document
+@router.put("/documents/{doc_id}/rename", response_model=DocumentRenameResponse)
+async def rename_document(
+    doc_id: str = Path(..., title="Document ID"), 
+    request: DocumentRenameRequest = Body(...)
+):
+    try:
+        updated_doc = db.rename_document(doc_id, request.new_name)
+        if not updated_doc:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+            
+        return {
+            "success": True,
+            "document_id": updated_doc["id"],
+            "message": "Document renamed successfully"
+        }
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error renaming document {doc_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error renaming document: {str(e)}")
+
+# Delete a document
+@router.delete("/documents/{doc_id}", response_model=DocumentDeleteResponse)
+async def delete_document(doc_id: str = Path(..., title="Document ID")):
+    try:
+        # Get document before deleting to check if it has a file path
+        document = db.get_document(doc_id)
+        if not document:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+            
+        # Check if document has a file to delete
+        if document.get("file_path"):
+            # Handle the file path - it's stored as "uploads/filename" but we need the absolute path
+            file_path = FilePath("static") / document["file_path"]
+            # Delete file if it exists
+            if file_path.exists():
+                try:
+                    os.remove(file_path)
+                    logger.info(f"Deleted file: {file_path}")
+                except Exception as file_e:
+                    logger.error(f"Error deleting file {file_path}: {str(file_e)}")
+        
+        # Delete from database
+        result = db.delete_document(doc_id)
+        if not result:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+            
+        return {
+            "success": True,
+            "message": "Document deleted successfully"
+        }
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting document {doc_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting document: {str(e)}")

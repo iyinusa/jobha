@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/api/jobs",
+    tags=["jobs"],
+    responses={404: {"description": "Not found"}}
+)
 
 @router.get("/search")
 async def search_jobs(
