@@ -12,6 +12,7 @@ from datetime import datetime
 # Import database service
 from services.database.json_db import db
 from services.document_parser.parser import DocumentParser
+from services.document_parser.file_converter import FileConverter  # Add import for file converter
 
 # Import CV analyzer
 from services.ai.cv_analyzer import CVAnalyzer
@@ -79,6 +80,8 @@ async def upload_cv(
         file_ext = os.path.splitext(file.filename)[1].lower()
         unique_filename = f"{uuid.uuid4()}{file_ext}"
         file_path = UPLOAD_DIR / unique_filename
+        pdf_path = None
+        original_doc_path = None
         
         # Validate file type
         allowed_extensions = ['.pdf', '.doc', '.docx', '.txt']
@@ -98,6 +101,28 @@ async def upload_cv(
             
         logger.info(f"File saved to {file_path}")
         
+        # Convert DOCX/DOC files to PDF
+        if file_ext in ['.doc', '.docx']:
+            try:
+                # Store the original path for cleanup later
+                original_doc_path = file_path
+                
+                # Convert to PDF
+                pdf_path = await FileConverter.docx_to_pdf(str(file_path), str(UPLOAD_DIR))
+                
+                # Update variables for further processing
+                file_path = FilePath(pdf_path)
+                file_ext = ".pdf"
+                unique_filename = os.path.basename(pdf_path)
+                
+                logger.info(f"File converted to PDF: {pdf_path}")
+            except Exception as conv_err:
+                # Clean up original file if conversion fails
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                logger.error(f"PDF conversion error: {str(conv_err)}")
+                raise HTTPException(status_code=500, detail=f"Failed to convert document to PDF: {str(conv_err)}")
+        
         # Determine document category (CV or Cover Letter)
         doc_category = "cv"  # Default is CV
         if "cover" in file.filename.lower():
@@ -112,20 +137,30 @@ async def upload_cv(
         elif file_ext == ".txt":
             file_format = "text"
         
+        # Create relative path for database storage
+        relative_path = f"uploads/{unique_filename}"
+        
         # If skip_parsing is True, just save file metadata
         if skip_parsing:
             document = {
                 "id": str(uuid.uuid4()),
                 "name": os.path.splitext(file.filename)[0],
                 "category": doc_category,  
-                "type": file_format,      
-                "file_path": f"uploads/{unique_filename}",
+                "type": file_format if file_ext != ".pdf" else "pdf",  # Ensure type is correct if converted
+                "file_path": relative_path,
                 "content": None,
-                "modified": datetime.now().isoformat()
+                "modified": datetime.now().isoformat(),
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
             }
             
             # Save to database
             document = db.add_document(document)
+            
+            # Clean up original doc/docx file if it was converted
+            if original_doc_path and os.path.exists(original_doc_path):
+                os.remove(original_doc_path)
+                logger.info(f"Cleaned up original document: {original_doc_path}")
             
             # Return success response with document ID
             return {
@@ -141,6 +176,9 @@ async def upload_cv(
         if not content:
             # Delete the file if parsing failed
             os.remove(file_path)
+            # Also delete original file if it exists
+            if original_doc_path and os.path.exists(original_doc_path):
+                os.remove(original_doc_path)
             raise HTTPException(status_code=400, detail="Could not parse document")
             
         # Create document object
@@ -148,14 +186,21 @@ async def upload_cv(
             "id": str(uuid.uuid4()),
             "name": os.path.splitext(file.filename)[0],
             "category": doc_category,  
-            "type": file_format,       
+            "type": file_format if file_ext != ".pdf" else "pdf",  # Ensure type is correct if converted
             "content": content,
-            "file_path": f"uploads/{unique_filename}",
-            "modified": datetime.now().isoformat()
+            "file_path": relative_path,
+            "modified": datetime.now().isoformat(),
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
         }
         
         # Save to database
         document = db.add_document(document)
+        
+        # Clean up original doc/docx file if it was converted
+        if original_doc_path and os.path.exists(original_doc_path):
+            os.remove(original_doc_path)
+            logger.info(f"Cleaned up original document: {original_doc_path}")
         
         return {
             "success": True, 

@@ -42957,12 +42957,12 @@ h4 {
   font-family: "Poppins", sans-serif;
 }
 
-.dropdown-menu {
+/* .dropdown-menu {
   right: auto;
   left: 50% !important;
   -webkit-transform: translate(-50%, 0);
           transform: translate(-50%, 0);
-}
+} */
 
 .navbar-dark .main-menu li a.nav-link {
   color: #e2e8f0;
@@ -49741,6 +49741,3 @@ li.setup-process-item:not(:last-child):before {
     display: none;
   }
 }
-
-/*# sourceMappingURL=scss */
-/*# sourceMappingURL=main.css.map */

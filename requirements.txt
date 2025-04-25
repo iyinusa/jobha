@@ -19,6 +19,7 @@ aiofiles==23.2.1
 # Document parsing libraries
 pdfminer.six==20221105
 python-docx==0.8.11
+docx2pdf==0.1.8
 langdetect==1.0.9
 spacy==3.7.2
 nltk==3.8.1

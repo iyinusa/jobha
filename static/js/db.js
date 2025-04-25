@@ -4,13 +4,13 @@
 // Initialize database module
 const DB = {
     documentContainer: null,
-    
+
     // Initialize the document container
     initializeDatabase() {
         console.log("Initializing document database...");
         // Set document container
         this.documentContainer = document.getElementById('document-container');
-        
+
         // Load parsed documents
         this.loadDocuments()
             .then(() => {
@@ -26,7 +26,7 @@ const DB = {
                 console.error("Error during initialization:", error);
             });
     },
-    
+
     // Load all documents from server and display in the sidebar
     async loadDocuments() {
         try {
@@ -39,15 +39,15 @@ const DB = {
                 this.documentContainer.innerHTML = '';
                 this.documentContainer.appendChild(loadingEl);
             }
-            
+
             // Get all documents from server API
             const documents = await window.CVParser.listDocuments();
             console.log(`Loaded ${documents ? documents.length : 0} documents from server`);
-            
+
             // Clear container
             if (this.documentContainer) {
                 this.documentContainer.innerHTML = '';
-                
+
                 // Always show documents container, even if empty
                 if (!documents || documents.length === 0) {
                     // Show minimal container without the empty state message
@@ -60,7 +60,7 @@ const DB = {
                         </button>
                     `;
                     this.documentContainer.appendChild(emptyContainer);
-                    
+
                     // Add event listener to the upload button
                     const uploadBtn = document.getElementById('empty-state-upload-btn');
                     if (uploadBtn) {
@@ -73,34 +73,34 @@ const DB = {
                             fileInput.addEventListener('change', this.handleFileUpload.bind(this));
                             document.body.appendChild(fileInput);
                             fileInput.click();
-                            
+
                             // Remove after selection
-                            fileInput.addEventListener('blur', function() {
+                            fileInput.addEventListener('blur', function () {
                                 document.body.removeChild(fileInput);
                             });
                         });
                     }
                 } else {
                     // Documents are already sorted by updated_at (newest first) from the backend
-                    
+
                     // Get current timestamp to identify recently updated documents
                     const now = new Date();
-                    
+
                     // Create document list items
                     documents.forEach((doc, index) => {
                         const item = this.createDocumentListItem(doc, index === 0);
-                        
+
                         // Add "new" badge for documents created within the last hour
                         if (doc.created_at) {
                             const createdAt = new Date(doc.created_at);
                             const timeDiff = now - createdAt;
                             const oneHour = 60 * 60 * 1000; // milliseconds
-                            
+
                             if (timeDiff < oneHour) {
                                 const badge = document.createElement('span');
                                 badge.className = 'badge bg-success ms-2';
                                 badge.textContent = 'New';
-                                
+
                                 // Find the document name element and append the badge
                                 const docName = item.querySelector('span');
                                 if (docName) {
@@ -108,10 +108,10 @@ const DB = {
                                 }
                             }
                         }
-                        
+
                         this.documentContainer.appendChild(item);
                     });
-                    
+
                     // Auto-select first document if none is currently selected
                     if (documents.length > 0) {
                         const activeItem = this.documentContainer.querySelector('.list-group-item.active');
@@ -119,7 +119,7 @@ const DB = {
                             const firstItem = this.documentContainer.querySelector('.list-group-item');
                             if (firstItem) {
                                 firstItem.classList.add('active');
-                                
+
                                 // Get the document ID and load it
                                 const docId = firstItem.getAttribute('data-id');
                                 if (docId) {
@@ -133,14 +133,14 @@ const DB = {
             }
         } catch (error) {
             console.error('Error loading documents:', error);
-            
+
             // Clear the loading indicator if present
             if (this.documentContainer) {
                 const loadingEl = this.documentContainer.querySelector('.spinner-border');
                 if (loadingEl) {
                     this.documentContainer.innerHTML = '';
                 }
-                
+
                 // Add error message and retry button
                 const errorEl = document.createElement('div');
                 errorEl.className = 'alert alert-danger m-3';
@@ -152,7 +152,7 @@ const DB = {
                     </button>
                 `;
                 this.documentContainer.appendChild(errorEl);
-                
+
                 // Add event listener to retry button
                 const retryBtn = document.getElementById('retry-load-documents');
                 if (retryBtn) {
@@ -161,21 +161,21 @@ const DB = {
                     });
                 }
             }
-            
+
             // Show toast with error message
             this.showToast('Error', 'Could not load documents from server. ' + (error.message || ''));
         }
     },
-    
+
     // Add file documents to the document list
     appendFileDocuments(files) {
         if (!files || files.length === 0) {
             console.log("No files to append");
             return;
         }
-        
+
         console.log(`Appending ${files.length} files to document list`);
-        
+
         // Process each file
         files.forEach(file => {
             // Create a file document object
@@ -190,7 +190,7 @@ const DB = {
                 category: 'cv', // Default category
                 isFileDocument: true // Flag to indicate this is a direct file document
             };
-            
+
             // Add to document list using the existing document list item creation function
             const item = this.createDocumentListItem(fileDoc);
             if (this.documentContainer) {
@@ -198,18 +198,18 @@ const DB = {
             }
         });
     },
-    
+
     // Get clean filename (without extension)
     getCleanFilename(filename) {
         const lastDotIndex = filename.lastIndexOf('.');
         if (lastDotIndex === -1) return filename;
         return filename.substring(0, lastDotIndex);
     },
-    
+
     // Determine document type from filename
     getDocumentType(filename) {
         const ext = filename.toLowerCase().split('.').pop();
-        
+
         switch (ext) {
             case 'pdf':
                 return 'pdf';
@@ -222,7 +222,7 @@ const DB = {
                 return 'other';
         }
     },
-    
+
     // Get file icon based on type
     getFileIcon(type) {
         switch (type) {
@@ -240,7 +240,7 @@ const DB = {
                 return 'fas fa-file text-muted';
         }
     },
-    
+
     // Create an empty state element
     showEmptyState() {
         const emptyState = document.createElement('div');
@@ -255,9 +255,9 @@ const DB = {
                 <i class="fas fa-upload me-2"></i> Upload CV
             </button>
         `;
-        
+
         this.documentContainer.appendChild(emptyState);
-        
+
         // Add event listener to the upload button
         const uploadBtn = document.getElementById('empty-state-upload-btn');
         if (uploadBtn) {
@@ -270,44 +270,44 @@ const DB = {
                 fileInput.addEventListener('change', this.handleFileUpload.bind(this));
                 document.body.appendChild(fileInput);
                 fileInput.click();
-                
+
                 // Remove after selection
-                fileInput.addEventListener('blur', function() {
+                fileInput.addEventListener('blur', function () {
                     document.body.removeChild(fileInput);
                 });
             });
         }
     },
-    
+
     // Create a list item for a document
     createDocumentListItem(doc, isRecent = false) {
         const listItem = document.createElement('a');
         listItem.href = '#';
         listItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-        
+
         // Highlight recent document with subtle background
         if (isRecent) {
             listItem.classList.add('bg-light');
         }
-        
+
         // Ensure we're using the string version of the ID for consistency
         const docId = doc.id.toString();
         listItem.setAttribute('data-id', docId);
-        
+
         // Store both category and type as data attributes
         listItem.setAttribute('data-category', doc.category || 'cv');    // Document category (cv or cover-letter)
         listItem.setAttribute('data-type', doc.type || 'pdf');          // File format type (pdf, word, text)
-        
+
         // Create document icon and name
         const docInfo = document.createElement('div');
         docInfo.className = 'd-flex align-items-center';
-        
+
         // Choose icon based on document category and file type
         const icon = document.createElement('i');
-        
+
         // Determine icon class based on both category and file type
         let iconClass = '';
-        
+
         if (doc.category === 'cv') {
             // For CV documents, show file format icon
             switch (doc.type) {
@@ -342,31 +342,31 @@ const DB = {
             // Fallback to file format type if category is missing
             iconClass = this.getFileIcon(doc.type || 'pdf');
         }
-        
+
         icon.className = iconClass;
         icon.style.marginRight = '12px';
-        
+
         // Document name - ensure it has a valid value
         const docName = document.createElement('span');
         docName.textContent = doc.name || 'Untitled Document';
-        
+
         // Add formatted date as a badge for recent documents
         if (doc.updated_at) {
             const updatedDate = new Date(doc.updated_at);
             const now = new Date();
             const timeDiff = now - updatedDate;
             const oneDay = 24 * 60 * 60 * 1000; // milliseconds
-            
+
             // Show timestamp for documents updated within the last day
             if (timeDiff < oneDay) {
                 const timestamp = document.createElement('small');
                 timestamp.className = 'text-muted ms-2';
-                
+
                 // Format time based on how recent it is
                 let timeText;
                 const minutesDiff = Math.floor(timeDiff / (60 * 1000));
                 const hoursDiff = Math.floor(timeDiff / (60 * 60 * 1000));
-                
+
                 if (minutesDiff < 1) {
                     timeText = 'just now';
                 } else if (minutesDiff < 60) {
@@ -374,59 +374,59 @@ const DB = {
                 } else {
                     timeText = `${hoursDiff}h ago`;
                 }
-                
+
                 timestamp.textContent = timeText;
                 docName.appendChild(timestamp);
             }
         }
-        
+
         docInfo.appendChild(icon);
         docInfo.appendChild(docName);
-        
+
         // Document actions (3-dots menu)
         const actionsBtn = document.createElement('button');
         actionsBtn.type = 'button';
         actionsBtn.className = 'btn btn-sm text-muted border-0 p-0';
         actionsBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
-        
+
         // Add elements to list item
         listItem.appendChild(docInfo);
         listItem.appendChild(actionsBtn);
-        
+
         // Add event listeners
         listItem.addEventListener('click', (event) => {
             // Only handle clicks that aren't on the actions button
             if (event.target !== actionsBtn && !actionsBtn.contains(event.target)) {
                 event.preventDefault();
-                
+
                 // Remove active class from all items
                 const items = this.documentContainer.querySelectorAll('.list-group-item');
                 items.forEach(item => item.classList.remove('active'));
-                
+
                 // Add active class to clicked item
                 listItem.classList.add('active');
-                
+
                 // Load document
                 this.loadDocumentById(docId);
             }
         });
-        
+
         // Add actions button click
         actionsBtn.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
             window.showContextMenu(event, doc);
         });
-        
+
         return listItem;
     },
-    
+
     // Format date for display
     formatDate(date) {
         const d = new Date(date);
         return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     },
-    
+
     // Get document by ID (helper for download)
     async getDocumentById(id) {
         try {
@@ -436,16 +436,16 @@ const DB = {
             return null;
         }
     },
-    
+
     // Load document by ID
     async loadDocumentById(id) {
         try {
             // Show subtle loading indicator
             this.showLoadingState('Loading document...');
-            
+
             // Ensure ID is handled as a string - the backend uses string IDs
             id = String(id);
-            
+
             // Get document from server API
             let doc;
             try {
@@ -456,20 +456,20 @@ const DB = {
                 this.showToast('Error', 'Could not load document: ' + (fetchError.message || 'Network error'));
                 return { success: false, message: fetchError.message || 'Network error' };
             }
-            
+
             if (!doc) {
                 this.hideLoadingState();
                 this.showToast('Error', 'Document not found. Please try again.');
                 return { success: false, message: 'Document not found' };
             }
-            
+
             // Mark viewer as having this document loaded
             const viewerElement = document.querySelector('.viewer-wrapper');
             if (viewerElement) {
                 viewerElement.setAttribute('data-current-doc-id', doc.id);
                 viewerElement.removeAttribute('data-file-path'); // Clear any previous file path
             }
-            
+
             // Update download button to show the document name
             const downloadBtn = document.getElementById('download-document-btn');
             if (downloadBtn) {
@@ -477,7 +477,7 @@ const DB = {
                 downloadBtn.classList.remove('btn-outline-primary');
                 downloadBtn.classList.add('btn-primary');
             }
-            
+
             // Check if we should use direct file viewing instead of parsed content
             if (doc.file_path) {
                 // We have a file path, so load the document directly
@@ -490,23 +490,23 @@ const DB = {
                     modified: doc.modified,
                     isFileDocument: true
                 };
-                
+
                 // Use the existing file document loader
                 return this.loadFileDocument(fileDoc);
             }
-            
+
             // Otherwise continue with regular document display
             // Get viewer content elements
             const cvViewer = document.getElementById('cv-viewer');
             const coverLetterViewer = document.getElementById('cover-letter-viewer');
-            
+
             if (!cvViewer || !coverLetterViewer) {
                 console.error('Document viewer elements not found');
                 this.hideLoadingState();
                 this.showToast('Error', 'Document viewer not available. Please refresh the page.');
                 return { success: false, message: 'Viewer elements not found' };
             }
-            
+
             // Activate appropriate tab based on document category
             if (doc.category === 'cv') {
                 const tabLinks = document.querySelectorAll('.nav-link');
@@ -517,7 +517,7 @@ const DB = {
                         link.classList.remove('active');
                     }
                 });
-                
+
                 const tabPanes = document.querySelectorAll('.tab-pane');
                 tabPanes.forEach(pane => {
                     if (pane.id === 'cv-tab') {
@@ -526,7 +526,7 @@ const DB = {
                         pane.classList.remove('active', 'show');
                     }
                 });
-                
+
                 // Set content with smooth transition
                 if (cvViewer) {
                     // Remove empty state if it exists
@@ -539,10 +539,10 @@ const DB = {
                             }
                         }, 300);
                     }
-                    
+
                     // Create a professional document container
                     let contentContainer = cvViewer.querySelector('.document-content:not(.empty-viewer-state)');
-                    
+
                     if (!contentContainer) {
                         // If no content container exists, create a new one with fade-in effect
                         contentContainer = document.createElement('div');
@@ -551,11 +551,11 @@ const DB = {
                         contentContainer.style.transition = 'opacity 0.3s ease';
                         cvViewer.innerHTML = '';
                         cvViewer.appendChild(contentContainer);
-                        
+
                         // Trigger reflow for transition to work
                         contentContainer.offsetHeight;
                     }
-                    
+
                     // Add document metadata section
                     const metadataHtml = `
                         <div class="document-metadata mb-4">
@@ -566,28 +566,28 @@ const DB = {
                             </div>
                         </div>
                     `;
-                    
+
                     // Create metadata container
                     const metadataContainer = document.createElement('div');
                     metadataContainer.className = 'document-metadata-container';
                     metadataContainer.innerHTML = metadataHtml;
-                    
+
                     // Create document content container that preserves original formatting
                     const originalContentContainer = document.createElement('div');
                     originalContentContainer.className = 'original-document-content';
-                    
+
                     // Check if content exists and is not null/undefined
                     if (doc.content) {
                         originalContentContainer.innerHTML = doc.content;
                     } else {
                         originalContentContainer.innerHTML = '<div class="alert alert-warning">No content available for this document.</div>';
                     }
-                    
+
                     // Clear container and append both sections
                     contentContainer.innerHTML = '';
                     contentContainer.appendChild(metadataContainer);
                     contentContainer.appendChild(originalContentContainer);
-                    
+
                     // Trigger fade in
                     setTimeout(() => {
                         contentContainer.style.opacity = '1';
@@ -602,7 +602,7 @@ const DB = {
                         link.classList.remove('active');
                     }
                 });
-                
+
                 const tabPanes = document.querySelectorAll('.tab-pane');
                 tabPanes.forEach(pane => {
                     if (pane.id === 'cover-letter-tab') {
@@ -611,7 +611,7 @@ const DB = {
                         pane.classList.remove('active', 'show');
                     }
                 });
-                
+
                 // Set content with smooth transition
                 if (coverLetterViewer) {
                     // Remove empty state if it exists
@@ -624,10 +624,10 @@ const DB = {
                             }
                         }, 300);
                     }
-                    
+
                     // Create a professional document container
                     let contentContainer = coverLetterViewer.querySelector('.document-content:not(.empty-viewer-state)');
-                    
+
                     if (!contentContainer) {
                         // If no content container exists, create a new one with fade-in effect
                         contentContainer = document.createElement('div');
@@ -636,11 +636,11 @@ const DB = {
                         contentContainer.style.transition = 'opacity 0.3s ease';
                         coverLetterViewer.innerHTML = '';
                         coverLetterViewer.appendChild(contentContainer);
-                        
+
                         // Trigger reflow for transition to work
                         contentContainer.offsetHeight;
                     }
-                    
+
                     // Add document metadata section
                     const metadataHtml = `
                         <div class="document-metadata mb-4">
@@ -651,28 +651,28 @@ const DB = {
                             </div>
                         </div>
                     `;
-                    
+
                     // Create metadata container
                     const metadataContainer = document.createElement('div');
                     metadataContainer.className = 'document-metadata-container';
                     metadataContainer.innerHTML = metadataHtml;
-                    
+
                     // Create document content container that preserves original formatting
                     const originalContentContainer = document.createElement('div');
                     originalContentContainer.className = 'original-document-content';
-                    
+
                     // Check if content exists and is not null/undefined
                     if (doc.content) {
                         originalContentContainer.innerHTML = doc.content;
                     } else {
                         originalContentContainer.innerHTML = '<div class="alert alert-warning">No content available for this document.</div>';
                     }
-                    
+
                     // Clear container and append both sections
                     contentContainer.innerHTML = '';
                     contentContainer.appendChild(metadataContainer);
                     contentContainer.appendChild(originalContentContainer);
-                    
+
                     // Trigger fade in
                     setTimeout(() => {
                         contentContainer.style.opacity = '1';
@@ -688,7 +688,7 @@ const DB = {
                         link.classList.remove('active');
                     }
                 });
-                
+
                 const tabPanes = document.querySelectorAll('.tab-pane');
                 tabPanes.forEach(pane => {
                     if (pane.id === 'cv-tab') {
@@ -697,7 +697,7 @@ const DB = {
                         pane.classList.remove('active', 'show');
                     }
                 });
-                
+
                 // Render as generic document
                 if (cvViewer) {
                     // Similar setup as CV but with generic type
@@ -707,7 +707,7 @@ const DB = {
                     contentContainer.style.transition = 'opacity 0.3s ease';
                     cvViewer.innerHTML = '';
                     cvViewer.appendChild(contentContainer);
-                    
+
                     // Add document metadata section
                     const metadataHtml = `
                         <div class="document-metadata mb-4">
@@ -718,36 +718,36 @@ const DB = {
                             </div>
                         </div>
                     `;
-                    
+
                     const metadataContainer = document.createElement('div');
                     metadataContainer.className = 'document-metadata-container';
                     metadataContainer.innerHTML = metadataHtml;
-                    
+
                     const originalContentContainer = document.createElement('div');
                     originalContentContainer.className = 'original-document-content';
-                    
+
                     if (doc.content) {
                         originalContentContainer.innerHTML = doc.content;
                     } else {
                         originalContentContainer.innerHTML = '<div class="alert alert-warning">No content available for this document.</div>';
                     }
-                    
+
                     contentContainer.appendChild(metadataContainer);
                     contentContainer.appendChild(originalContentContainer);
-                    
+
                     // Trigger fade in
                     setTimeout(() => {
                         contentContainer.style.opacity = '1';
                     }, 50);
                 }
             }
-            
+
             // Hide loading state
             this.hideLoadingState();
-            
+
             // Log success to confirm the document was loaded
             console.log(`Document loaded successfully: ${doc.name} (ID: ${doc.id})`);
-            
+
             return { success: true };
         } catch (error) {
             console.error('Error loading document:', error);
@@ -756,21 +756,21 @@ const DB = {
             return { success: false, message: error.message || 'Unknown error loading document' };
         }
     },
-    
+
     // Load a file document for viewing
     loadFileDocument(fileDoc) {
         try {
             console.log("Loading file document:", fileDoc); // Add debugging
             // Show loading state
             this.showLoadingState('Loading document...');
-            
+
             // Mark viewer as having this document loaded
             const viewerElement = document.querySelector('.viewer-wrapper');
             if (viewerElement) {
                 viewerElement.removeAttribute('data-current-doc-id'); // Clear any previous document ID
                 viewerElement.setAttribute('data-file-path', fileDoc.path);
             }
-            
+
             // Update download button to show the document name
             const downloadBtn = document.getElementById('download-document-btn');
             if (downloadBtn) {
@@ -778,7 +778,7 @@ const DB = {
                 downloadBtn.classList.remove('btn-outline-primary');
                 downloadBtn.classList.add('btn-primary');
             }
-            
+
             // Default to CV tab
             const tabLinks = document.querySelectorAll('.nav-link');
             tabLinks.forEach(link => {
@@ -788,7 +788,7 @@ const DB = {
                     link.classList.remove('active');
                 }
             });
-            
+
             const tabPanes = document.querySelectorAll('.tab-pane');
             tabPanes.forEach(pane => {
                 if (pane.id === 'cv-tab') {
@@ -797,7 +797,7 @@ const DB = {
                     pane.classList.remove('active', 'show');
                 }
             });
-            
+
             // Get the viewer container
             const cvViewer = document.getElementById('cv-viewer');
             if (!cvViewer) {
@@ -806,7 +806,7 @@ const DB = {
                 this.showToast('Error', 'Document viewer not available. Please refresh the page.');
                 return { success: false };
             }
-            
+
             // Remove empty state if exists
             const emptyState = cvViewer.querySelector('.empty-viewer-state');
             if (emptyState) {
@@ -817,10 +817,10 @@ const DB = {
                     }
                 }, 300);
             }
-            
+
             // Create container with fade effect
             cvViewer.innerHTML = '';
-            
+
             // File URL - fix the path construction
             // Make sure we have a proper path that starts with 'uploads/'
             let filePath = fileDoc.path;
@@ -829,15 +829,15 @@ const DB = {
             }
             const fileUrl = `/static/${filePath}`;
             console.log("File URL constructed:", fileUrl);
-            
+
             // Get full absolute URL (needed for external viewers)
             const origin = window.location.origin;
             const absoluteFileUrl = origin + fileUrl;
             console.log("Absolute File URL:", absoluteFileUrl);
-            
+
             // Modified date information
             const modifiedDate = fileDoc.modified ? this.formatDate(new Date(fileDoc.modified)) : this.formatDate(new Date());
-            
+
             // Standard metadata header for all file types
             const metadataHeader = `
                 <div class="document-metadata mb-4">
@@ -848,7 +848,7 @@ const DB = {
                     </div>
                 </div>
             `;
-            
+
             // Handle different file types
             switch (fileDoc.type) {
                 case 'pdf':
@@ -857,13 +857,13 @@ const DB = {
                     pdfContainer.className = 'document-content-native p-0';
                     pdfContainer.style.opacity = '0';
                     pdfContainer.style.transition = 'opacity 0.3s ease';
-                    
+
                     // Add metadata section at the top
                     // const pdfMetadataSection = document.createElement('div');
                     // pdfMetadataSection.className = 'pdf-metadata p-4';
                     // pdfMetadataSection.innerHTML = metadataHeader;
                     // pdfContainer.appendChild(pdfMetadataSection);
-                    
+
                     // Create container for native PDF embedding
                     const nativePdfContainer = document.createElement('div');
                     nativePdfContainer.className = 'native-pdf-container';
@@ -872,7 +872,7 @@ const DB = {
                     nativePdfContainer.style.overflow = 'hidden';
                     nativePdfContainer.style.borderRadius = '8px';
                     nativePdfContainer.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.05)';
-                    
+
                     // Use iframe for direct PDF rendering - this ensures the document is displayed exactly as it is
                     const pdfIframe = document.createElement('iframe');
                     pdfIframe.className = 'native-pdf-iframe';
@@ -882,7 +882,7 @@ const DB = {
                     pdfIframe.style.border = 'none';
                     pdfIframe.setAttribute('title', fileDoc.name);
                     pdfIframe.setAttribute('loading', 'lazy');
-                    
+
                     // Fallback for browsers that don't support PDF embedding
                     const fallbackDiv = document.createElement('div');
                     fallbackDiv.className = 'pdf-fallback-container';
@@ -894,12 +894,12 @@ const DB = {
                             </a>
                         </div>
                     `;
-                    
+
                     // Add PDF content
                     nativePdfContainer.appendChild(pdfIframe);
                     nativePdfContainer.appendChild(fallbackDiv);
                     pdfContainer.appendChild(nativePdfContainer);
-                    
+
                     // Add viewer options buttons below the PDF
                     const viewerOptions = document.createElement('div');
                     viewerOptions.className = 'viewer-options d-flex justify-content-between align-items-center bg-light p-3 mt-3 rounded';
@@ -917,15 +917,15 @@ const DB = {
                         </a>
                     `;
                     pdfContainer.appendChild(viewerOptions);
-                    
+
                     // Append to the document
                     cvViewer.appendChild(pdfContainer);
-                    
+
                     // Fade in the container
                     setTimeout(() => {
                         pdfContainer.style.opacity = '1';
                         this.hideLoadingState();
-                        
+
                         // Add event listeners for view mode toggle
                         const toggleButtons = pdfContainer.querySelectorAll('.toggle-view-mode');
                         toggleButtons.forEach(btn => {
@@ -936,7 +936,7 @@ const DB = {
                                     nativePdfContainer.style.display = 'block';
                                     const enhancedViewer = pdfContainer.querySelector('.pdf-viewer-element');
                                     if (enhancedViewer) enhancedViewer.style.display = 'none';
-                                    
+
                                     // Update button states
                                     toggleButtons.forEach(b => {
                                         if (b.getAttribute('data-mode') === 'native') {
@@ -958,11 +958,11 @@ const DB = {
                                         nativePdfContainer.parentNode.insertBefore(enhancedViewer, nativePdfContainer.nextSibling);
                                         window.loadPdfDocument(fileUrl, enhancedViewer);
                                     }
-                                    
+
                                     // Show enhanced view, hide native
                                     nativePdfContainer.style.display = 'none';
                                     enhancedViewer.style.display = 'block';
-                                    
+
                                     // Update button states
                                     toggleButtons.forEach(b => {
                                         if (b.getAttribute('data-mode') === 'enhanced') {
@@ -978,19 +978,19 @@ const DB = {
                         });
                     }, 300);
                     break;
-                    
+
                 case 'word':
                     // For Word documents, we offer multiple viewing options with fallbacks
                     const wordContainer = document.createElement('div');
                     wordContainer.className = 'document-content-native';
                     wordContainer.style.opacity = '0';
                     wordContainer.style.transition = 'opacity 0.3s ease';
-                    
+
                     // const wordViewerHeader = document.createElement('div');
                     // wordViewerHeader.className = 'pdf-metadata p-4';
                     // wordViewerHeader.innerHTML = metadataHeader;
                     // wordContainer.appendChild(wordViewerHeader);
-                    
+
                     // Create document viewer container
                     const docViewerContainer = document.createElement('div');
                     docViewerContainer.className = 'word-viewer-container';
@@ -999,16 +999,16 @@ const DB = {
                     docViewerContainer.style.border = '1px solid #e9ecef';
                     docViewerContainer.style.borderRadius = '8px';
                     docViewerContainer.style.overflow = 'hidden';
-                    
+
                     // Prepare URLs for different viewer options
                     const encodedUrl = encodeURIComponent(absoluteFileUrl);
-                    
+
                     // Microsoft Office Online viewer (better for .docx files)
                     const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
-                    
+
                     // Google Docs viewer (alternative option)
                     const googleDocsUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
-                    
+
                     // Default to Microsoft Office viewer since it handles Word docs better
                     const wordFrame = document.createElement('iframe');
                     wordFrame.src = officeViewerUrl;
@@ -1018,12 +1018,12 @@ const DB = {
                     wordFrame.setAttribute('title', fileDoc.name);
                     wordFrame.setAttribute('loading', 'lazy');
                     wordFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
-                    
+
                     // Log what we're doing
                     console.log(`Loading Word document with Office Online viewer: ${officeViewerUrl}`);
-                    
+
                     docViewerContainer.appendChild(wordFrame);
-                    
+
                     // Better viewer options UI with multiple viewing options
                     const viewerOptionsTabs = document.createElement('div');
                     viewerOptionsTabs.className = 'viewer-options bg-light p-3 mt-3 rounded';
@@ -1050,16 +1050,16 @@ const DB = {
                             </div>
                         </div>
                     `;
-                    
+
                     wordContainer.appendChild(docViewerContainer);
                     wordContainer.appendChild(viewerOptionsTabs);
                     cvViewer.appendChild(wordContainer);
-                    
+
                     // Fade in the container
                     setTimeout(() => {
                         wordContainer.style.opacity = '1';
                         this.hideLoadingState();
-                        
+
                         // Set up event listeners for viewer option buttons
                         const viewerButtons = viewerOptionsTabs.querySelectorAll('.viewer-option');
                         viewerButtons.forEach(btn => {
@@ -1071,11 +1071,11 @@ const DB = {
                                 });
                                 btn.classList.remove('btn-outline-primary');
                                 btn.classList.add('btn-primary', 'active');
-                                
+
                                 // Get viewer type and update iframe
                                 const viewerType = btn.getAttribute('data-viewer');
                                 const viewerMessage = document.getElementById('viewer-message');
-                                
+
                                 // Show loading message
                                 viewerMessage.innerHTML = `
                                     <div class="text-center py-2">
@@ -1085,7 +1085,7 @@ const DB = {
                                         <span class="ms-2">Switching document viewer...</span>
                                     </div>
                                 `;
-                                
+
                                 // Change iframe source based on viewer type
                                 if (viewerType === 'google') {
                                     console.log(`Switching to Google Docs viewer: ${googleDocsUrl}`);
@@ -1108,14 +1108,14 @@ const DB = {
                                 }
                             });
                         });
-                        
+
                         // Handle iframe errors
                         wordFrame.addEventListener('load', () => {
                             console.log('Word document viewer loaded');
                             const viewerMessage = document.getElementById('viewer-message');
                             viewerMessage.innerHTML = '';
                         });
-                        
+
                         wordFrame.addEventListener('error', () => {
                             console.error('Failed to load Word document in viewer');
                             const viewerMessage = document.getElementById('viewer-message');
@@ -1128,27 +1128,27 @@ const DB = {
                         });
                     }, 300);
                     break;
-                    
+
                 case 'text':
                     // Create container for text document with syntax highlighting
                     const textContainer = document.createElement('div');
                     textContainer.className = 'document-content-native';
                     textContainer.style.opacity = '0';
                     textContainer.style.transition = 'opacity 0.3s ease';
-                    
+
                     // Add metadata initially
                     const textHeader = document.createElement('div');
                     textHeader.className = 'pdf-metadata p-4';
                     textHeader.innerHTML = metadataHeader;
                     textContainer.appendChild(textHeader);
-                    
+
                     const textContentWrapper = document.createElement('div');
                     textContentWrapper.className = 'text-content-wrapper p-4';
                     textContentWrapper.innerHTML = '<div class="text-content-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
                     textContainer.appendChild(textContentWrapper);
-                    
+
                     cvViewer.appendChild(textContainer);
-                    
+
                     // Fetch and display text content with original formatting
                     fetch(fileUrl)
                         .then(response => response.text())
@@ -1170,9 +1170,9 @@ const DB = {
                                 textContent.style.overflow = 'auto';
                                 textContent.style.maxHeight = 'calc(100vh - 300px)';
                                 textContent.textContent = text;
-                                
+
                                 contentPlaceholder.replaceWith(textContent);
-                                
+
                                 // Fade in when content is loaded
                                 textContainer.style.opacity = '1';
                                 this.hideLoadingState();
@@ -1193,21 +1193,21 @@ const DB = {
                                         </a>
                                     </div>
                                 `;
-                                
+
                                 // Fade in even on error
                                 textContainer.style.opacity = '1';
                                 this.hideLoadingState();
                             }
                         });
                     break;
-                    
+
                 default:
                     // Generic file view with download option and attempt to embed if possible
                     const genericContainer = document.createElement('div');
                     genericContainer.className = 'document-content-native';
                     genericContainer.style.opacity = '0';
                     genericContainer.style.transition = 'opacity 0.3s ease';
-                    
+
                     genericContainer.innerHTML = `
                         ${metadataHeader}
                         <div class="text-center mt-5">
@@ -1223,19 +1223,19 @@ const DB = {
                             </div>
                         </div>
                     `;
-                    
+
                     cvViewer.appendChild(genericContainer);
-                    
+
                     // Fade in the container
                     setTimeout(() => {
                         genericContainer.style.opacity = '1';
                         this.hideLoadingState();
                     }, 300);
             }
-            
+
             console.log(`File document loaded successfully: ${fileDoc.name}`);
             return { success: true };
-            
+
         } catch (error) {
             console.error('Error loading file document:', error);
             this.hideLoadingState();
@@ -1243,7 +1243,7 @@ const DB = {
             return { success: false, message: error.message };
         }
     },
-    
+
     // Get file type icon for metadata display
     getFileTypeIcon(type) {
         switch (type) {
@@ -1257,7 +1257,7 @@ const DB = {
                 return 'fa-file';
         }
     },
-    
+
     // Get file type label for metadata
     getFileTypeLabel(type) {
         switch (type) {
@@ -1271,33 +1271,33 @@ const DB = {
                 return 'Document';
         }
     },
-    
+
     // Handle file upload
     async handleFileUpload(event) {
         try {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             // Show loading indicator
             this.showLoadingState('Uploading and parsing your CV...');
-            
+
             try {
                 // Parse content using the CV Parser
                 const result = await window.CVParser.parseFile(file);
-                
+
                 // Reload document list
                 await this.loadDocuments();
-                
+
                 // Hide loading indicator (ensure it's hidden)
                 this.hideLoadingState();
-                
+
                 // Show success message
                 this.showToast('Success', 'CV uploaded and parsed successfully!');
-                
+
                 // Load the newly uploaded document in the viewer
                 if (result && result.document_id) {
                     await this.loadDocumentById(result.document_id);
-                    
+
                     // Highlight the document in the list
                     const newDocItem = document.querySelector(`[data-id="${result.document_id}"]`);
                     if (newDocItem) {
@@ -1313,7 +1313,7 @@ const DB = {
                 // Show user-friendly error
                 this.showToast('Upload Failed', error.message || 'Failed to parse CV. Please try a different file format.');
             }
-            
+
         } catch (error) {
             console.error('Error handling file upload:', error);
             // Hide loading indicator on outer error
@@ -1327,18 +1327,18 @@ const DB = {
             }, 500);
         }
     },
-    
+
     // Show loading state
     showLoadingState(message = 'Loading...') {
         // Remove any existing loading overlay first to prevent duplicates
         this.hideLoadingState();
-        
+
         // Create new loading overlay
         const loadingOverlay = document.createElement('div');
         loadingOverlay.id = 'loading-overlay';
         loadingOverlay.className = 'position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75';
         loadingOverlay.style.zIndex = '9999';
-        
+
         loadingOverlay.innerHTML = `
             <div class="text-center">
                 <div class="spinner-border text-primary mb-3" role="status">
@@ -1347,16 +1347,16 @@ const DB = {
                 <p id="loading-message">${message}</p>
             </div>
         `;
-        
+
         document.body.appendChild(loadingOverlay);
-        
+
         // Add safety timeout to auto-hide after 30 seconds in case something goes wrong
         window.loadingTimeout = setTimeout(() => {
             console.warn('Loading timeout reached - forcing hide of loading overlay');
             this.hideLoadingState();
         }, 30000);
     },
-    
+
     // Hide loading state
     hideLoadingState() {
         // Clear any existing timeout
@@ -1364,7 +1364,7 @@ const DB = {
             clearTimeout(window.loadingTimeout);
             window.loadingTimeout = null;
         }
-        
+
         // Find and remove loading overlay
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
@@ -1386,7 +1386,7 @@ const DB = {
             }
         }
     },
-    
+
     // Show toast notification
     showToast(title, message) {
         // Create toast container if it doesn't exist
@@ -1398,10 +1398,10 @@ const DB = {
             toastContainer.style.zIndex = '11000';
             document.body.appendChild(toastContainer);
         }
-        
+
         // Create unique ID for this toast
         const toastId = 'toast-' + Date.now();
-        
+
         // Create the toast element
         const toastEl = document.createElement('div');
         toastEl.className = 'toast';
@@ -1409,7 +1409,7 @@ const DB = {
         toastEl.setAttribute('role', 'alert');
         toastEl.setAttribute('aria-live', 'assertive');
         toastEl.setAttribute('aria-atomic', 'true');
-        
+
         toastEl.innerHTML = `
             <div class="toast-header">
                 <strong class="me-auto">${title}</strong>
@@ -1419,38 +1419,38 @@ const DB = {
                 ${message}
             </div>
         `;
-        
+
         // Add toast to container
         toastContainer.appendChild(toastEl);
-        
+
         // Initialize and show toast
         const bsToast = new bootstrap.Toast(toastEl);
         bsToast.show();
-        
+
         // Remove toast after it's hidden
         toastEl.addEventListener('hidden.bs.toast', function () {
             toastEl.remove();
         });
     },
-    
+
     // Rename document
     async renameDocument(id, newName) {
         try {
             // Show loading indicator
             this.showLoadingState('Renaming document...');
-            
+
             // Call the API to rename document
             const result = await window.CVParser.renameDocument(id, newName);
-            
+
             // Hide loading indicator
             this.hideLoadingState();
-            
+
             if (result.success) {
                 this.showToast('Success', 'Document renamed successfully');
             } else {
                 this.showToast('Error', result.message || 'Failed to rename document');
             }
-            
+
             return result;
         } catch (error) {
             console.error('Error renaming document:', error);
@@ -1460,25 +1460,25 @@ const DB = {
             return { success: false, message: error.message };
         }
     },
-    
+
     // Delete document
     async deleteDocument(id) {
         try {
             // Show loading indicator
             this.showLoadingState('Deleting document...');
-            
+
             // Call the API to delete document
             const result = await window.CVParser.deleteDocument(id);
-            
+
             // Hide loading indicator
             this.hideLoadingState();
-            
+
             if (result.success) {
                 this.showToast('Success', 'Document deleted successfully');
             } else {
                 this.showToast('Error', result.message || 'Failed to delete document');
             }
-            
+
             return result;
         } catch (error) {
             console.error('Error deleting document:', error);

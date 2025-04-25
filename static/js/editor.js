@@ -75,7 +75,7 @@ function showContextMenu(event, doc) {
     // Adjust position calculations for better alignment with the button
     const menuPosition = {
         top: buttonRect.bottom + window.scrollY,
-        left: buttonRect.left + window.scrollX - 180, // Align right edge of menu to left of button
+        left: buttonRect.right + window.scrollX - menu.offsetWidth, // Align right edge of menu with right edge of button
     };
     
     // Position the menu using the button's position

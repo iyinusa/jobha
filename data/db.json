@@ -12,15 +12,15 @@
       "updated_at": "2025-04-24T22:46:23.333004"
     },
     {
-      "id": "8e9febff-2acd-44ea-adf3-7613bed1924f",
-      "name": "My Resume",
+      "id": "7f7e50eb-fec2-44e6-a501-f4805b70d819",
+      "name": "Kennedy-CV",
       "category": "cv",
-      "type": "word",
-      "file_path": "uploads/b89a0856-3c8d-41d5-a32b-ae985fdbc866.docx",
+      "type": "pdf",
+      "file_path": "uploads/296affa6-8289-4f53-9ca8-bdbf7f573953.pdf",
       "content": null,
-      "modified": "2025-04-24T22:45:32.259784",
-      "created_at": "2025-04-24T22:45:32.278853",
-      "updated_at": "2025-04-24T22:45:32.278853"
+      "modified": "2025-04-25T16:34:09.235083",
+      "created_at": "2025-04-25T16:34:09.269110",
+      "updated_at": "2025-04-25T16:34:09.269110"
     }
   ]
 }

@@ -135,6 +135,46 @@ class DocumentParser:
                 'error': f"Failed to process document: {str(e)}"
             }
     
+    def parse_document(self, file_path: str) -> str:
+        """
+        Parse a document from file path and extract plain text content
+        
+        Args:
+            file_path (str): Path to the document file
+            
+        Returns:
+            str: Extracted text content or empty string if parsing fails
+        """
+        try:
+            file_ext = Path(file_path).suffix.lower()
+            
+            logger.info(f"Processing document from path: {file_path} (type: {file_ext})")
+            
+            # Extract text based on file type
+            if file_ext in ['.pdf']:
+                # Use asyncio to run the async method in a synchronous context
+                import asyncio
+                text = asyncio.run(self.pdf_parser.extract_text(file_path))
+            elif file_ext in ['.doc', '.docx']:
+                text = asyncio.run(self.docx_parser.extract_text(file_path))
+            elif file_ext in ['.txt']:
+                text = asyncio.run(self.text_parser.extract_text(file_path))
+            else:
+                logger.error(f"Unsupported file type: {file_ext}")
+                return ""
+            
+            if not text or text.isspace():
+                logger.error("Extracted text is empty or contains only whitespace")
+                return ""
+                
+            logger.info(f"Successfully extracted {len(text)} characters of text")
+            return text
+            
+        except Exception as e:
+            error_details = traceback.format_exc()
+            logger.error(f"Error parsing document from path: {str(e)}\n{error_details}")
+            return ""
+    
     def get_section_patterns(self) -> Dict[str, list]:
         """
         Get the patterns used to identify sections
