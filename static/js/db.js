@@ -593,6 +593,7 @@ const DB = {
                         contentContainer.style.opacity = '1';
                     }, 50);
                 }
+
             } else if (doc.category === 'cover-letter') {
                 const tabLinks = document.querySelectorAll('.nav-link');
                 tabLinks.forEach(link => {
@@ -754,6 +755,27 @@ const DB = {
             this.hideLoadingState();
             this.showToast('Error', 'Could not load document: ' + (error.message || 'Unknown error'));
             return { success: false, message: error.message || 'Unknown error loading document' };
+        }
+    },
+
+    // Helper method to trigger CV analysis in the background without blocking UI
+    async _triggerCvAnalysisInBackground(docId) {
+        try {
+            console.log(`Triggering background CV analysis for document ${docId}`);
+            
+            // Show discreet notification that analysis is happening
+            this.showToast('CV Analysis', 'Analyzing CV in background...');
+            
+            // Call the Perplexity API to analyze the CV
+            const result = await window.CVParser.analyzeDocument(docId);
+            
+            if (result.success) {
+                console.log('CV Analysis complete:', result.analysis);
+                this.showToast('Analysis Complete', 'Your CV has been analyzed successfully.');
+            }
+        } catch (error) {
+            console.error('Background CV analysis error:', error);
+            // Don't show errors to user since this is a background process
         }
     },
 
@@ -1234,6 +1256,7 @@ const DB = {
             }
 
             console.log(`File document loaded successfully: ${fileDoc.name}`);
+
             return { success: true };
 
         } catch (error) {
@@ -1288,9 +1311,6 @@ const DB = {
                 // Reload document list
                 await this.loadDocuments();
 
-                // Hide loading indicator (ensure it's hidden)
-                this.hideLoadingState();
-
                 // Show success message
                 this.showToast('Success', 'CV uploaded and parsed successfully!');
 
@@ -1305,6 +1325,13 @@ const DB = {
                         items.forEach(item => item.classList.remove('active'));
                         newDocItem.classList.add('active');
                     }
+                    
+                    // Trigger CV analysis immediately after upload
+                    this.showToast('Success', 'Analyzing CV...!');
+                    this._triggerCvAnalysisInBackground(result.document_id);
+
+                    // Hide loading indicator (ensure it's hidden)
+                    this.hideLoadingState();
                 }
             } catch (error) {
                 console.error('Error in file upload:', error);

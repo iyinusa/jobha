@@ -33,10 +33,23 @@ class JsonDatabase:
             
             # Create initial DB structure
             with open(self.db_file, 'w') as f:
-                json.dump({"documents": []}, f)
+                json.dump({"documents": [], "documents_keywords": []}, f)
             
             logger.info(f"Created new database file at {self.db_file}")
         else:
+            # Check if existing DB has documents_keywords array, add if not
+            try:
+                with open(self.db_file, 'r') as f:
+                    db_content = json.load(f)
+                    
+                if "documents_keywords" not in db_content:
+                    db_content["documents_keywords"] = []
+                    with open(self.db_file, 'w') as f:
+                        json.dump(db_content, f, indent=2)
+                    logger.info(f"Added documents_keywords array to existing database")
+            except Exception as e:
+                logger.error(f"Error checking or updating database structure: {str(e)}")
+                
             logger.info(f"Using existing database file at {self.db_file}")
     
     def read_db(self) -> Dict:
@@ -48,12 +61,12 @@ class JsonDatabase:
             logger.error(f"JSON decode error in {self.db_file}. Creating fresh database.")
             # If file is corrupted, create a new one
             with open(self.db_file, 'w') as f:
-                empty_db = {"documents": []}
+                empty_db = {"documents": [], "documents_keywords": []}
                 json.dump(empty_db, f)
             return empty_db
         except Exception as e:
             logger.error(f"Error reading database: {str(e)}")
-            return {"documents": []}
+            return {"documents": [], "documents_keywords": []}
     
     def write_db(self, data: Dict) -> bool:
         """Write data to the database file"""
@@ -158,10 +171,78 @@ class JsonDatabase:
         
         if len(documents) < initial_length:
             db["documents"] = documents
+            # Also delete any associated keywords for this document
+            self.delete_document_keywords(doc_id)
             self.write_db(db)
             return True
         
         return False  # Document not found
+    
+    # Document keywords management methods
+    def save_document_keywords(self, doc_id: str, keywords_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Save extracted keywords/information for a document.
+        If keywords already exist for this document, update them.
+        """
+        doc_id = str(doc_id)
+        db = self.read_db()
+        keywords_list = db.get("documents_keywords", [])
+        
+        # Check if keywords already exist for this document
+        existing_index = None
+        for i, item in enumerate(keywords_list):
+            if str(item.get("document_id")) == doc_id:
+                existing_index = i
+                break
+        
+        # Add document ID and timestamp to the data
+        keywords_data["document_id"] = doc_id
+        keywords_data["updated_at"] = datetime.now().isoformat()
+        
+        # Update or append
+        if existing_index is not None:
+            keywords_list[existing_index] = keywords_data
+        else:
+            keywords_data["created_at"] = datetime.now().isoformat()
+            keywords_list.append(keywords_data)
+        
+        # Save changes
+        db["documents_keywords"] = keywords_list
+        self.write_db(db)
+        
+        return keywords_data
+    
+    def get_document_keywords(self, doc_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get keywords/information extracted from a document.
+        """
+        doc_id = str(doc_id)
+        db = self.read_db()
+        keywords_list = db.get("documents_keywords", [])
+        
+        for item in keywords_list:
+            if str(item.get("document_id")) == doc_id:
+                return item
+        
+        return None  # No keywords found for this document
+    
+    def delete_document_keywords(self, doc_id: str) -> bool:
+        """
+        Delete keywords associated with a document.
+        """
+        doc_id = str(doc_id)
+        db = self.read_db()
+        keywords_list = db.get("documents_keywords", [])
+        
+        initial_length = len(keywords_list)
+        keywords_list = [item for item in keywords_list if str(item.get("document_id")) != doc_id]
+        
+        if len(keywords_list) < initial_length:
+            db["documents_keywords"] = keywords_list
+            self.write_db(db)
+            return True
+        
+        return False  # No keywords found for this document
 
 # Create a singleton instance of the database
 db = JsonDatabase()

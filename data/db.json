@@ -1,26 +1,106 @@
 {
   "documents": [
     {
-      "id": "17e157b1-3c28-47ea-9636-762d2aab062c",
-      "name": "IKYinusa CV - PDF",
+      "id": "e0015989-7b3c-4e61-9e20-11a57ef49262",
+      "name": "IKYinusa-CV",
       "category": "cv",
       "type": "pdf",
-      "file_path": "uploads/35f4fd6b-1695-4a1e-9696-659078477b19.pdf",
-      "content": null,
-      "modified": "2025-04-24T19:00:41.467754",
-      "created_at": "2025-04-24T19:00:41.493356",
-      "updated_at": "2025-04-24T22:46:23.333004"
-    },
+      "file_path": "uploads/5842ec86-b980-468b-87cc-56734e3abedf.pdf",
+      "content": "Idowu Kennedy Yinusa Software Engineer iyinusa@yahoo.co.uk | +44 7831 500816 Edinburgh, Scotland EH48 2GD, United Kingdom PROFESSIONAL SUMMARY Software Engineer with over 8 years of experience with a proven track record of delivering high-quality product-led solutions using various methodologies and best practices a Professional Member of the British Computer Society (MBCS). WORK HISTORY Executive Board Member (IT Manager - Web & Apps) Afrikindness | Volunteer | United Kingdom January 2024 - Present Providing directions for the success of Afrikindness projects. Lead and inspire the Team, promoting a culture of collaboration, teamwork, innovation, and excellence. Assess team members' strengths and allocate tasks based on individual strengths and organisational needs. Lead the development and implementation of website and app strategies. Collaborate with internal teams to understand technical requirements for various projects. Design and maintain the technical architecture of the Afrikindness website, parents' networking platform app, etc. Provide mentorship, technical support, and guidance to other team members. Stacks: Kanban WordPress PHP Flutter/Dart REST APIs SQL Google APIs JavaScript Git Slack Trello Miro COO / Technical Lead Tehilah Base Digital | Permanent | Nigeria September 2013 September 2023 Developed and managed the broadband/internet billing portal to ensure over 85% customer retention. Developed and managed an Insurtech solution for a FinTech firm to help customers reduce costs by purchasing insurance covers/policies easily. Led the development of an institution's portal to help recover 62.5% of annual dues, valued at 1.08m. Led the development of an Edtech Generative AI app built on the GPT/LLM framework to provide academic support. Super-head all operational and software technical activities by determining the appropriate technology stack and team for all client projects. Stacks: Kanban CMS Firebase NoSQL PHP Flutter REST APIs SQL JavaScript WordPress Git Python LLM Frameworks ML/AI Project Management Docker AWS CTO / Full Stack Engineer Shawali Intercontinental Trading Co. Ltd | Contracts | Nigeria May 2016 September 2023 Led a non-profit humanitarian portal that allows donors to create support tickets and funding for over 12,000 less privileged. Led a water and grocery e-commerce platform that enables customers to find and purchase from vendors closer to them easily, onboarded over 30,000 vendors and delivery agents. Responsible for application development and server scaling. Responsible for Google Developer Account creation, app store listing setup, publishing, and maintenance of app in Google PlayStore. Super-head all project resources, technical recruiting, and maintenance. Stacks: Kanban WordPress PHP Flutter/Dart Python REST APIs SQL Google APIs JavaScript Git AWS Technical Partner Kondar Global Solutions Ltd | Part-time | Canada April 2022 July 2022 Responsible for onboarding spare part vendors in Nigeria on the KondarSoft SaaS e-commerce platform. Responsible for technical integration and support for clients' stores. Stacks: Bootstrap PHP CodeIgniter JavaScript MySQL Mobile (Flutter) Engineer JovFlu LLC | Contract | United States April 2021 July 2021 Designed the UI/UX of the dating platform. Responsible for creating the RESTful API/micro-services. Set up the Firebase Auth, Firestore Database, Storage, etc. Responsible for the creation of the Google Developer Account, created store listing, billing, and taxing, In-app purchases, and published app to the Playstore. Responsible for the creation of the Apple Developer Account, set up account, billing and taxing, In-app purchases, and publishing of the app to the App Store Connect. Stacks: Firebase Google APIs PHP Flutter/Dart REST APIs SQL WordPress Engineer SBMark Consulting LLC | Contract | United States November 2020 January 2021 Responsible for the design and deployment of the career support platform. Installed and configured the WordPress website template and plugins. Set up and configured third-party integration such as Calendly, Live Chart, and YouTube Video API. Deployed the website on the shared hosting, and configured email accounts. Stacks: WooCommerce WordPress PHP JavaScript YouTube API Calendly API Project Manager / Technical Lead Quaflux Limited | Contract | Nigeria July 2015 September 2015 Led the project planning and execution of the custom ERP platform solution. Created sprints for team members, and assigned and coordinated their task obligations. Hired and trained 4 technical personnel to join the team. Monitored and merged each team member's codebase in the master branch Stacks: Bitbucket Amazon Web Services (AWS) Kanban PHP MySQL EDUCATION MSc. Computing (major: Software Engineering) Edinburgh Napier University - 2024 Information System Engineering, Knowledge Management., Security Audit & Compliance, Machine Learning/AI, Management of Software Projects. Projects: Conversation PDT using Transformers & LLM for Emotional Sentiment Detections, Smart Car Parking System using Google ML Toolkits, Multilingual Conversational Dialogue: Case Study of Customer Support Bots. HND/BSc. Computer Science Lagos State University of Science and Technology (formerly Lagos State Polytechnic) - 2011 Database Design, C++, Computer Architecture, Database Design, Software Engineering, Project Management, Introduction to AI, etc. Projects: Text-to-Speech Automation using Microsoft Synthesis SDK. OND Computer Science Lagos State University of Science and Technology (formerly Lagos State Polytechnic) - 2008 System Programming, Assembly Language, Communication Skills, System Analysis, Data Structure, Descriptive Statistics, etc. PUBLICATIONS Machine Learning Conversational AI | FlowiseAI | OpenAI | Pinecone | Apify LLM orchestration flow for conversational AI based on website content crawling using FlowiseAI, OpenAI Embedding, Pinecone Vector Database, and Apify on LangChain LLM Framework. SeerBit Payment APIs Review on Flutter Projects Review of SeerBit Payment API s integrations such as the Simple Checkout, Standard Checkout, Virtual Accounts, and Subscriptions in a Flutter framework for Android and iOS applications. Embed Conversational ChatBot on WordPress or ReactJS Website This publication is a result of R&D to improve B2C engagement to enhance growth and customer satisfaction. TRAINING & CERTIFICATIONS API Observability Fundamentals February 2024 Tyk Technologies AWS Fundamentals October 2022 Python for Data Science January 2024 IBM Google Developer Alumni January 2022 AWS/Coursera Google Inc. Google Playstore Certified January 2022 Google Inc. LigoWave Certified Engineer May 2019 LigoWave Facebook Messager (Chatbot) Certified April 2017 Facebook/Meta CodeIgniter (PHP MVC) Certified April 2016 Udemy Effective Leadership June 2014 HP HONOURS & AWARDS Top 50 Thought Leaders in EdTech January 2023 Thinker360: Top 50 thought leaders and influencers in this category based on their personally authored content, awards, and recognition. Excellent Award January 2015 The Top Executives: Top Executives in the IT and Software Industry 2015, Award of Excellence 2015 . Meritorious Award February 2014 NACOSS, Lagos State Polytechnic: Most Supportive IT Firm for immense contribution and effort toward the progress of the Nigeria Association of Computer Students, Lagos State Polytechnic 2013/2014 Session. Best IT Personnel October 2011 The Department of Computer Science, Lagos State Polytechnic: Recognition award presented as the Best IT Personnel 2010/2011 academic session for contribution to the association and academic growth. Software Director November 2010 NACOSS, Lagos State Polytechnic: Appointed as the Software Director for the Nigerian Association of Computer Science Students, Lagos State Polytechnic Chapter.",
+      "modified": "2025-04-27T04:18:11.552910",
+      "created_at": "2025-04-27T04:18:11.587582",
+      "updated_at": "2025-04-27T04:18:14.674766"
+    }
+  ],
+  "documents_keywords": [
     {
-      "id": "7f7e50eb-fec2-44e6-a501-f4805b70d819",
-      "name": "Kennedy-CV",
-      "category": "cv",
-      "type": "pdf",
-      "file_path": "uploads/296affa6-8289-4f53-9ca8-bdbf7f573953.pdf",
-      "content": null,
-      "modified": "2025-04-25T16:34:09.235083",
-      "created_at": "2025-04-25T16:34:09.269110",
-      "updated_at": "2025-04-25T16:34:09.269110"
+      "skills": [
+        "PHP",
+        "Flutter/Dart",
+        "REST APIs",
+        "SQL",
+        "JavaScript",
+        "Git",
+        "AWS",
+        "Python",
+        "LLM Frameworks",
+        "ML/AI",
+        "Docker",
+        "WordPress",
+        "Firebase",
+        "Google APIs",
+        "Kanban",
+        "Project Management",
+        "Team Leadership",
+        "Mentorship",
+        "Collaboration",
+        "Effective Leadership"
+      ],
+      "job_titles": [
+        "Executive Board Member (IT Manager - Web & Apps)",
+        "COO / Technical Lead",
+        "CTO / Full Stack Engineer",
+        "Technical Partner",
+        "Mobile (Flutter) Engineer",
+        "WordPress Engineer",
+        "Project Manager / Technical Lead"
+      ],
+      "industries": [
+        "Non-Profit",
+        "Technology",
+        "E-commerce",
+        "InsurTech",
+        "FinTech",
+        "EdTech",
+        "Telecommunications",
+        "SaaS"
+      ],
+      "years_experience": 8,
+      "education_level": "MSc",
+      "education_field": [
+        "Computing (Software Engineering)",
+        "Information System Engineering",
+        "Knowledge Management",
+        "Security Audit & Compliance",
+        "Machine Learning/AI",
+        "Management of Software Projects"
+      ],
+      "certifications": [
+        "API Observability Fundamentals",
+        "AWS Fundamentals",
+        "Python for Data Science",
+        "Google Developer Alumni",
+        "Google Playstore Certified",
+        "LigoWave Certified Engineer",
+        "Facebook Messager (Chatbot) Certified",
+        "CodeIgniter (PHP MVC) Certified",
+        "Effective Leadership"
+      ],
+      "languages": [],
+      "key_achievements": [
+        "Led development of Edtech Generative AI app using GPT/LLM frameworks",
+        "Created humanitarian portal supporting 12,000+ less privileged",
+        "Built water/grocery e-commerce platform with 30,000+ vendors",
+        "Developed broadband billing portal with 85% customer retention",
+        "Implemented ERP solution recovering 62.5% of annual dues",
+        "Recognized as Top 50 Thought Leader in EdTech (2023)"
+      ],
+      "job_search_keywords": [
+        "Software Engineer",
+        "Full Stack Developer",
+        "Technical Lead",
+        "CTO",
+        "AI/ML Engineer",
+        "Cloud Architect",
+        "DevOps Engineer",
+        "Flutter Developer",
+        "WordPress Specialist",
+        "Project Manager"
+      ],
+      "analyzed_at": "2025-04-27T04:18:31.418829",
+      "document_id": "e0015989-7b3c-4e61-9e20-11a57ef49262",
+      "updated_at": "2025-04-27T04:18:31.482573",
+      "created_at": "2025-04-27T04:18:31.482589"
     }
   ]
 }

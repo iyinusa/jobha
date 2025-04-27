@@ -199,6 +199,50 @@ const CVParser = {
             console.error('Error fetching files:', error);
             throw error;
         }
+    },
+    
+    // Analyze document with CV keyword extraction
+    async analyzeDocument(docId) {
+        try {
+            console.log(`Analyzing document with ID: ${docId}...`);
+            
+            // Call the analyze endpoint
+            const response = await fetch(`/api/cv/documents/${docId}/analyze`, {
+                method: 'POST'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || errorData.message || `Failed to analyze document (Status: ${response.status})`);
+            }
+            
+            const result = await response.json();
+            console.log('Document analysis complete:', result);
+            return result;
+        } catch (error) {
+            console.error('Error analyzing document:', error);
+            throw error;
+        }
+    },
+    
+    // Get document keywords/analysis
+    async getDocumentKeywords(docId) {
+        try {
+            console.log(`Fetching keywords for document ID: ${docId}...`);
+            
+            const response = await fetch(`/api/cv/documents/${docId}/keywords`);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || errorData.message || `Failed to fetch document keywords (Status: ${response.status})`);
+            }
+            
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Error fetching document keywords:', error);
+            throw error;
+        }
     }
 };
 

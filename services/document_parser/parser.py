@@ -150,30 +150,41 @@ class DocumentParser:
             
             logger.info(f"Processing document from path: {file_path} (type: {file_ext})")
             
+            # Instead of trying to run the async function in a synchronous context,
+            # we'll create a wrapper function that uses an appropriate method
+            import asyncio
+            
+            # Helper function to run coroutines in an existing event loop
+            def run_async(coro):
+                # Get the current event loop
+                loop = asyncio.get_event_loop()
+                
+                # If we're in an event loop already, we need a different approach
+                if loop.is_running():
+                    # Create a new task in the current event loop and get its result
+                    # This is the safe way to run a coroutine in an already running event loop
+                    return asyncio.create_task(coro)
+                else:
+                    # If no loop is running yet, we can use run_until_complete
+                    return loop.run_until_complete(coro)
+            
             # Extract text based on file type
             if file_ext in ['.pdf']:
-                # Use asyncio to run the async method in a synchronous context
-                import asyncio
-                text = asyncio.run(self.pdf_parser.extract_text(file_path))
+                # Create the task but don't wait for it - just return the coroutine
+                # The caller will need to await this
+                return asyncio.ensure_future(self.pdf_parser.extract_text(file_path))
             elif file_ext in ['.doc', '.docx']:
-                text = asyncio.run(self.docx_parser.extract_text(file_path))
+                return asyncio.ensure_future(self.docx_parser.extract_text(file_path))
             elif file_ext in ['.txt']:
-                text = asyncio.run(self.text_parser.extract_text(file_path))
+                return asyncio.ensure_future(self.text_parser.extract_text(file_path))
             else:
                 logger.error(f"Unsupported file type: {file_ext}")
-                return ""
-            
-            if not text or text.isspace():
-                logger.error("Extracted text is empty or contains only whitespace")
-                return ""
-                
-            logger.info(f"Successfully extracted {len(text)} characters of text")
-            return text
+                return None
             
         except Exception as e:
             error_details = traceback.format_exc()
             logger.error(f"Error parsing document from path: {str(e)}\n{error_details}")
-            return ""
+            return None
     
     def get_section_patterns(self) -> Dict[str, list]:
         """

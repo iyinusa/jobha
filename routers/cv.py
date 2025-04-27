@@ -17,6 +17,9 @@ from services.document_parser.file_converter import FileConverter  # Add import 
 # Import CV analyzer
 from services.ai.cv_analyzer import CVAnalyzer
 
+# Import the Perplexity API service
+from services.ai.perplexity_api import perplexity_api
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,8 +40,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 class DocumentResponse(BaseModel):
     id: str
     name: str
-    category: str  # Document category (cv or cover-letter)
-    type: str      # File format type (pdf, word, text)
+    category: str  
+    type: str      
     content: Optional[str] = None
     file_path: Optional[str] = None
     created_at: Optional[str] = None
@@ -68,6 +71,12 @@ class DocumentRenameResponse(BaseModel):
 class FileListResponse(BaseModel):
     success: bool
     files: List[Dict[str, Any]]
+
+class DocumentAnalysisResponse(BaseModel):
+    success: bool
+    document_id: str
+    analysis: Optional[Dict[str, Any]] = None
+    message: Optional[str] = None
 
 # File upload handler
 @router.post("/upload", response_model=DocumentCreateResponse)
@@ -171,7 +180,18 @@ async def upload_cv(
             
         # Parse document content
         parser = DocumentParser()
-        content = parser.parse_document(str(file_path))
+        result_coroutine = parser.parse_document(str(file_path))
+        
+        if not result_coroutine:
+            # Delete the file if parsing setup failed
+            os.remove(file_path)
+            # Also delete original file if it exists
+            if original_doc_path and os.path.exists(original_doc_path):
+                os.remove(original_doc_path)
+            raise HTTPException(status_code=400, detail="Could not initialize document parsing")
+        
+        # Await the coroutine to get the actual content
+        content = await result_coroutine
         
         if not content:
             # Delete the file if parsing failed
@@ -179,7 +199,7 @@ async def upload_cv(
             # Also delete original file if it exists
             if original_doc_path and os.path.exists(original_doc_path):
                 os.remove(original_doc_path)
-            raise HTTPException(status_code=400, detail="Could not parse document")
+            raise HTTPException(status_code=400, detail="Could not parse document content")
             
         # Create document object
         document = {
@@ -306,3 +326,103 @@ async def delete_document(doc_id: str = Path(..., title="Document ID")):
     except Exception as e:
         logger.error(f"Error deleting document {doc_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting document: {str(e)}")
+
+# Analyze a document with Perplexity API
+@router.post("/documents/{doc_id}/analyze", response_model=DocumentAnalysisResponse)
+async def analyze_document(doc_id: str = Path(..., title="Document ID")):
+    """
+    Analyze a CV document to extract information using the Perplexity API
+    """
+    try:
+        # Get the document from the database
+        document = db.get_document(doc_id)
+        if not document:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+        
+        # Check if document has content
+        if not document.get("content"):
+            # If no content, try to parse it from the file
+            file_path = document.get("file_path")
+            if not file_path:
+                raise HTTPException(status_code=400, detail="Document has no content or file path")
+                
+            # Get the absolute path
+            full_path = os.path.join("static", file_path)
+            if not os.path.exists(full_path):
+                raise HTTPException(status_code=404, detail=f"Document file not found: {full_path}")
+                
+            # Parse the document
+            parser = DocumentParser()
+            result_coroutine = parser.parse_document(full_path)
+            
+            if not result_coroutine:
+                raise HTTPException(status_code=400, detail="Could not initialize document parsing")
+                
+            # Await the coroutine to get the actual content
+            content = await result_coroutine
+            
+            if not content:
+                raise HTTPException(status_code=400, detail="Could not extract content from document")
+                
+            # Update document with content
+            document = db.update_document(doc_id, {"content": content})
+        
+        # Use Perplexity API to analyze the CV
+        analysis_result = perplexity_api.analyze_cv(document["content"])
+        
+        if not analysis_result:
+            raise HTTPException(status_code=500, detail="Failed to analyze document with Perplexity API")
+        
+        # Save the analysis results to the database
+        saved_keywords = db.save_document_keywords(doc_id, analysis_result)
+        
+        # Return the analysis results
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "analysis": saved_keywords,
+            "message": "Document analyzed successfully"
+        }
+    
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing document {doc_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing document: {str(e)}")
+
+# Get analysis for a document
+@router.get("/documents/{doc_id}/keywords", response_model=DocumentAnalysisResponse)
+async def get_document_keywords(doc_id: str = Path(..., title="Document ID")):
+    """
+    Get keywords/information extracted from a document
+    """
+    try:
+        # Verify document exists
+        document = db.get_document(doc_id)
+        if not document:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+            
+        # Get keywords from the database
+        keywords = db.get_document_keywords(doc_id)
+        
+        if not keywords:
+            return {
+                "success": False,
+                "document_id": doc_id,
+                "message": "No analysis data found for this document"
+            }
+            
+        return {
+            "success": True,
+            "document_id": doc_id,
+            "analysis": keywords,
+            "message": "Analysis data retrieved successfully"
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error getting document keywords {doc_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving document keywords: {str(e)}")
