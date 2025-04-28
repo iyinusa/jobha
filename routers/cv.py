@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, File, Form, Path, Body
+from fastapi import APIRouter, UploadFile, HTTPException, File, Form, Path, Body, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Union
@@ -77,6 +77,16 @@ class DocumentAnalysisResponse(BaseModel):
     document_id: str
     analysis: Optional[Dict[str, Any]] = None
     message: Optional[str] = None
+
+class JobSearchRequest(BaseModel):
+    doc_id: str = Field(..., description="Document ID of the CV to use for search")
+
+class JobListResponse(BaseModel):
+    success: bool
+    doc_id: str
+    jobs_count: int
+    jobs: List[Dict[str, Any]]
+    keywords_used: Optional[List[str]] = None
 
 # File upload handler
 @router.post("/upload", response_model=DocumentCreateResponse)
@@ -426,3 +436,111 @@ async def get_document_keywords(doc_id: str = Path(..., title="Document ID")):
     except Exception as e:
         logger.error(f"Error getting document keywords {doc_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error retrieving document keywords: {str(e)}")
+
+# INTEGRATED JOB SEARCH FUNCTIONALITY
+
+@router.post("/documents/{doc_id}/search-jobs", response_model=JobListResponse)
+async def search_jobs_with_document(doc_id: str = Path(..., title="Document ID")):
+    """
+    Search for jobs based on document keywords extracted from a CV.
+    Uses Perplexity API to search job websites.
+    """
+    try:
+        # Get the document from the database
+        doc = db.get_document(doc_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail=f"Document with ID {doc_id} not found")
+            
+        # Get document analysis if available
+        doc_analysis = db.get_document_keywords(doc_id)
+        
+        # If no analysis is found, we can't proceed
+        if not doc_analysis:
+            raise HTTPException(
+                status_code=400, 
+                detail="Document hasn't been analyzed yet. Please try again later."
+            )
+            
+        # Extract keywords for job search
+        keywords = []
+        
+        # First try to get job search keywords specifically
+        if doc_analysis.get("job_search_keywords"):
+            keywords.extend(doc_analysis.get("job_search_keywords"))
+        
+        # Add skills as keywords
+        if doc_analysis.get("skills"):
+            keywords.extend(doc_analysis.get("skills"))
+            
+        # Add job titles
+        if doc_analysis.get("job_titles"):
+            keywords.extend(doc_analysis.get("job_titles"))
+            
+        # Remove duplicates and limit to 20 keywords
+        unique_keywords = list(dict.fromkeys([k for k in keywords if k]))[:20]
+        
+        if not unique_keywords:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract keywords from document for job search"
+            )
+            
+        # Call Perplexity API to search for jobs
+        search_results = perplexity_api.search_jobs(unique_keywords, doc_id)
+        
+        if not search_results:
+            return {
+                "success": False,
+                "doc_id": doc_id,
+                "jobs_count": 0,
+                "jobs": [],
+                "message": "No job matches found. Please try again later."
+            }
+            
+        # Get all jobs associated with this document from database
+        jobs = db.get_document_jobs(doc_id)
+        
+        return {
+            "success": True,
+            "doc_id": doc_id,
+            "jobs_count": len(jobs),
+            "jobs": jobs,
+            "keywords_used": unique_keywords
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Job search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job search failed: {str(e)}")
+        
+@router.get("/documents/{doc_id}/jobs", response_model=JobListResponse)
+async def get_document_jobs(
+    doc_id: str = Path(..., title="Document ID"),
+    limit: int = Query(50, description="Number of results to return")
+):
+    """
+    Get jobs associated with a specific document ID
+    """
+    try:
+        # Verify document exists
+        document = db.get_document(doc_id)
+        if not document:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+            
+        # Get all jobs for this document
+        jobs = db.get_document_jobs(doc_id)
+        
+        # Sort by match score descending
+        sorted_jobs = sorted(jobs, key=lambda x: x.get("match_score", 0), reverse=True)
+        
+        return {
+            "success": True,
+            "doc_id": doc_id,
+            "jobs_count": len(sorted_jobs),
+            "jobs": sorted_jobs[:limit]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Could not retrieve jobs: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Could not retrieve jobs: {str(e)}")

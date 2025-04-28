@@ -31,22 +31,39 @@ class JsonDatabase:
             # Create parent directories if they don't exist
             self.db_file.parent.mkdir(parents=True, exist_ok=True)
             
-            # Create initial DB structure
+            # Create initial DB structure with documents_jobs array included
             with open(self.db_file, 'w') as f:
-                json.dump({"documents": [], "documents_keywords": []}, f)
+                json.dump({
+                    "documents": [], 
+                    "documents_keywords": [],
+                    "documents_jobs": []
+                }, f)
             
             logger.info(f"Created new database file at {self.db_file}")
         else:
-            # Check if existing DB has documents_keywords array, add if not
+            # Check if existing DB has needed arrays, add if not
             try:
                 with open(self.db_file, 'r') as f:
                     db_content = json.load(f)
-                    
+                
+                modified = False
+                
+                # Check for documents_keywords array
                 if "documents_keywords" not in db_content:
                     db_content["documents_keywords"] = []
+                    modified = True
+                    logger.info(f"Added documents_keywords array to existing database")
+                
+                # Check for documents_jobs array
+                if "documents_jobs" not in db_content:
+                    db_content["documents_jobs"] = []
+                    modified = True
+                    logger.info(f"Added documents_jobs array to existing database")
+                
+                # Save if modifications were made
+                if modified:
                     with open(self.db_file, 'w') as f:
                         json.dump(db_content, f, indent=2)
-                    logger.info(f"Added documents_keywords array to existing database")
             except Exception as e:
                 logger.error(f"Error checking or updating database structure: {str(e)}")
                 
@@ -61,12 +78,17 @@ class JsonDatabase:
             logger.error(f"JSON decode error in {self.db_file}. Creating fresh database.")
             # If file is corrupted, create a new one
             with open(self.db_file, 'w') as f:
-                empty_db = {"documents": [], "documents_keywords": []}
+                empty_db = {"documents": [], "documents_keywords": [], "documents_jobs": []}
                 json.dump(empty_db, f)
             return empty_db
         except Exception as e:
             logger.error(f"Error reading database: {str(e)}")
-            return {"documents": [], "documents_keywords": []}
+            return {"documents": [], "documents_keywords": [], "documents_jobs": []}
+    
+    # For compatibility with jobs.py
+    def read_data(self) -> Dict:
+        """Alias for read_db, for compatibility"""
+        return self.read_db()
     
     def write_db(self, data: Dict) -> bool:
         """Write data to the database file"""
@@ -173,6 +195,8 @@ class JsonDatabase:
             db["documents"] = documents
             # Also delete any associated keywords for this document
             self.delete_document_keywords(doc_id)
+            # Also delete any associated jobs for this document
+            self.delete_document_jobs(doc_id)
             self.write_db(db)
             return True
         
@@ -243,6 +267,63 @@ class JsonDatabase:
             return True
         
         return False  # No keywords found for this document
+    
+    # Document jobs management methods
+    def save_document_jobs(self, doc_id: str, jobs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Save job search results for a document.
+        If jobs already exist for this document, replace them.
+        """
+        doc_id = str(doc_id)
+        db = self.read_db()
+        jobs_list = db.get("documents_jobs", [])
+        
+        # Remove any existing jobs for this document
+        jobs_list = [job for job in jobs_list if str(job.get("doc_id")) != doc_id]
+        
+        # Add the new jobs
+        for job in jobs:
+            # Make sure each job has the doc_id
+            job["doc_id"] = doc_id
+            # Add timestamp if not present
+            if "search_timestamp" not in job:
+                job["search_timestamp"] = datetime.now().isoformat()
+            jobs_list.append(job)
+        
+        # Save changes
+        db["documents_jobs"] = jobs_list
+        self.write_db(db)
+        
+        return [job for job in jobs_list if str(job.get("doc_id")) == doc_id]
+    
+    def get_document_jobs(self, doc_id: str) -> List[Dict[str, Any]]:
+        """
+        Get job search results for a document.
+        """
+        doc_id = str(doc_id)
+        db = self.read_db()
+        jobs_list = db.get("documents_jobs", [])
+        
+        # Return only jobs for this document
+        return [job for job in jobs_list if str(job.get("doc_id")) == doc_id]
+    
+    def delete_document_jobs(self, doc_id: str) -> bool:
+        """
+        Delete job search results for a document.
+        """
+        doc_id = str(doc_id)
+        db = self.read_db()
+        jobs_list = db.get("documents_jobs", [])
+        
+        initial_length = len(jobs_list)
+        jobs_list = [job for job in jobs_list if str(job.get("doc_id")) != doc_id]
+        
+        if len(jobs_list) < initial_length:
+            db["documents_jobs"] = jobs_list
+            self.write_db(db)
+            return True
+        
+        return False  # No jobs found for this document
 
 # Create a singleton instance of the database
 db = JsonDatabase()

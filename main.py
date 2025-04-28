@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import pathlib
 
 # Import routers
-from routers.jobs import router as jobs_router
 from routers.cv import router as cv_router
 
 # Load environment variables
@@ -34,8 +33,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(jobs_router, tags=["Jobs"])
-app.include_router(cv_router, tags=["CV & Cover Letter"])
+app.include_router(cv_router, tags=["CV & Jobs"])
 
 # Define base directory
 BASE_DIR = pathlib.Path(__file__).resolve().parent

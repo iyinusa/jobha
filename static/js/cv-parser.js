@@ -182,24 +182,24 @@ const CVParser = {
     },
     
     // List all files
-    async listFiles() {
-        try {
-            const response = await fetch('/api/cv/documents/all-files');
-            if (!response.ok) {
-                throw new Error('Failed to fetch files');
-            }
-            const result = await response.json();
+    // async listFiles() {
+    //     try {
+    //         const response = await fetch('/api/cv/documents/all-files');
+    //         if (!response.ok) {
+    //             throw new Error('Failed to fetch files');
+    //         }
+    //         const result = await response.json();
             
-            // Handle the response format
-            if (result.success) {
-                return result.files || [];
-            }
-            return [];
-        } catch (error) {
-            console.error('Error fetching files:', error);
-            throw error;
-        }
-    },
+    //         // Handle the response format
+    //         if (result.success) {
+    //             return result.files || [];
+    //         }
+    //         return [];
+    //     } catch (error) {
+    //         console.error('Error fetching files:', error);
+    //         throw error;
+    //     }
+    // },
     
     // Analyze document with CV keyword extraction
     async analyzeDocument(docId) {
