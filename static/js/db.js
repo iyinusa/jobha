@@ -4,12 +4,14 @@
 // Initialize database module
 const DB = {
     documentContainer: null,
+    jobContainer: null,
 
     // Initialize the document container
     initializeDatabase() {
         console.log("Initializing document database...");
         // Set document container
         this.documentContainer = document.getElementById('document-container');
+        this.jobContainer = document.getElementById('job-container');
 
         // Load parsed documents
         this.loadDocuments()
@@ -25,6 +27,12 @@ const DB = {
             .catch(error => {
                 console.error("Error during initialization:", error);
             });
+
+        // Set up event listener for Find Jobs button
+        const findJobsBtn = document.getElementById('find-jobs-btn');
+        if (findJobsBtn) {
+            findJobsBtn.addEventListener('click', this.findMatchingJobs.bind(this));
+        }
     },
 
     // Load all documents from server and display in the sidebar
@@ -473,9 +481,21 @@ const DB = {
             // Update download button to show the document name
             const downloadBtn = document.getElementById('download-document-btn');
             if (downloadBtn) {
-                downloadBtn.innerHTML = `<i class="fas fa-download me-1"></i> Download "${doc.name}"`;
+                downloadBtn.innerHTML = `<i class="fas fa-download me-1"></i> Download`;
                 downloadBtn.classList.remove('btn-outline-primary');
                 downloadBtn.classList.add('btn-primary');
+            }
+
+            // Load jobs for this document (if any)
+            if (doc.category === 'cv' && this.jobContainer) {
+                console.log(`Loading jobs for document ID: ${doc.id}`);
+                // Load jobs asynchronously without blocking document loading
+                setTimeout(() => {
+                    this.loadJobsForDocument(doc.id).catch(error => {
+                        console.error('Failed to load jobs for document:', error);
+                        // Don't show error toast since this is automatic background loading
+                    });
+                }, 500);
             }
 
             // Check if we should use direct file viewing instead of parsed content
@@ -758,17 +778,316 @@ const DB = {
         }
     },
 
+    // Find matching jobs based on active CV document
+    async findMatchingJobs() {
+        try {
+            // Get the active document ID
+            const activeDocItem = document.querySelector('.document-list .list-group-item.active');
+            if (!activeDocItem) {
+                this.showToast('Error', 'Please select a CV document first');
+                return;
+            }
+
+            const docId = activeDocItem.getAttribute('data-id');
+            const docCategory = activeDocItem.getAttribute('data-category');
+
+            // Ensure we're using a CV document
+            if (docCategory !== 'cv') {
+                this.showToast('Error', 'Please select a CV/Resume document to find matching jobs');
+                return;
+            }
+
+            // Show job search modal
+            const jobSearchModal = new bootstrap.Modal(document.getElementById('jobSearchModal'));
+            jobSearchModal.show();
+
+            try {
+                // Call the API to search for jobs (updated endpoint)
+                const response = await fetch(`/api/cv/documents/${docId}/search-jobs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                // Hide the modal regardless of result
+                jobSearchModal.hide();
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Job search failed');
+                }
+
+                const result = await response.json();
+
+                if (result.success && result.jobs && result.jobs.length > 0) {
+                    // Load the jobs into the job container
+                    this.loadJobsForDocument(docId);
+                    this.showToast('Success', `Found ${result.jobs_count} matching jobs!`);
+                } else {
+                    this.showToast('Info', result.message || 'No matching jobs found. Select CV and Click "AI Job Matching"');
+                }
+            } catch (error) {
+                jobSearchModal.hide();
+                console.error('Job search error:', error);
+                this.showToast('Error', `Job search failed: ${error.message}`);
+            }
+        } catch (error) {
+            console.error('Error finding matching jobs:', error);
+            this.showToast('Error', `Job search failed: ${error.message}`);
+        }
+    },
+
+    // Load jobs for a specific document
+    async loadJobsForDocument(docId) {
+        try {
+            if (!this.jobContainer) {
+                console.error('Job container element not found');
+                return;
+            }
+
+            // Show loading indicator
+            this.jobContainer.innerHTML = `
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading matching jobs...</p>
+                </div>
+            `;
+
+            // Fetch jobs for the document (updated endpoint)
+            const response = await fetch(`/api/cv/documents/${docId}/jobs?limit=50`);
+
+            if (!response.ok) {
+                throw new Error('Failed to load jobs');
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.jobs && result.jobs.length > 0) {
+                // Clear the container
+                this.jobContainer.innerHTML = '';
+
+                // Create and append job items
+                result.jobs.forEach(job => {
+                    const jobItem = this.createJobListItem(job);
+                    this.jobContainer.appendChild(jobItem);
+                });
+
+                // Hide the no jobs message
+                const noJobsMessage = document.getElementById('no-jobs-message');
+                if (noJobsMessage) {
+                    noJobsMessage.style.display = 'none';
+                }
+            } else {
+                // Show no jobs message
+                this.jobContainer.innerHTML = `
+                    <div class="text-center p-4 text-muted" id="no-jobs-message">
+                        <i class="fas fa-briefcase fa-2x mb-3 opacity-50"></i>
+                        <p>No matching jobs found</p>
+                        <p class="small">Select CV/Resume and Click "AI Job Matching"</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading jobs:', error);
+            this.jobContainer.innerHTML = `
+                <div class="alert alert-danger m-3">
+                    <p><i class="fas fa-exclamation-circle me-2"></i>Failed to load jobs</p>
+                    <p class="small">${error.message}</p>
+                    <button class="btn btn-sm btn-danger mt-2" id="retry-load-jobs">
+                        <i class="fas fa-sync me-2"></i> Retry
+                    </button>
+                </div>
+            `;
+
+            // Add retry button functionality
+            const retryBtn = document.getElementById('retry-load-jobs');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    this.loadJobsForDocument(docId);
+                });
+            }
+        }
+    },
+
+    // Create a list item for a job
+    createJobListItem(job) {
+        const listItem = document.createElement('a');
+        listItem.href = '#';
+        listItem.className = 'list-group-item list-group-item-action p-3 job-list-item';
+        listItem.setAttribute('data-id', job.id || `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
+        listItem.setAttribute('data-job', JSON.stringify(job));
+
+        // Determine match badge class based on score
+        let matchBadgeClass = 'match-badge-low';
+
+        if (job.match_score >= 90) {
+            matchBadgeClass = 'match-badge-high';
+        } else if (job.match_score >= 75) {
+            matchBadgeClass = 'match-badge-medium';
+        } else if (job.match_score >= 60) {
+            matchBadgeClass = 'match-badge-low';
+        } else {
+            matchBadgeClass = 'match-badge-poor';
+        }
+
+        // Format job location (show Remote prominently)
+        const location = job.location ? job.location : 'Location not specified';
+        const locationClass = location.toLowerCase().includes('remote') ? 'job-location-remote' : '';
+
+        listItem.innerHTML = `
+            <h6 class="mb-1 job-item-title">${job.title || 'Untitled Job'}</h6>
+            <p class="mb-1 small job-item-company">${job.company || 'Unknown Company'}</p>
+            <div class="d-flex justify-content-between align-items-center small job-item-meta">
+                <span class="job-item-location ${locationClass}"><i class="fas fa-map-marker-alt me-1"></i> ${location}</span>
+                <span class="badge ${matchBadgeClass}">${job.match_score || 0}% Match</span>
+            </div>
+        `;
+
+        // Add click event to show job details
+        listItem.addEventListener('click', (event) => {
+            event.preventDefault();
+
+            // Remove active class from all items
+            const items = this.jobContainer.querySelectorAll('.list-group-item');
+            items.forEach(item => item.classList.remove('active'));
+
+            // Add active class to clicked item
+            listItem.classList.add('active');
+
+            // Show job details
+            this.showJobDetails(job);
+        });
+
+        return listItem;
+    },
+
+    // Show job details in the viewer
+    showJobDetails(job) {
+        try {
+            // Show the job tabs
+            const jobTabs = document.querySelectorAll('.job-tab');
+            jobTabs.forEach(tab => tab.classList.remove('d-none'));
+
+            // Switch to job details tab
+            const tabLinks = document.querySelectorAll('.nav-link');
+            tabLinks.forEach(link => {
+                if (link.getAttribute('href') === '#job-details-tab') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabPanes.forEach(pane => {
+                if (pane.id === 'job-details-tab') {
+                    pane.classList.add('active', 'show');
+                } else {
+                    pane.classList.remove('active', 'show');
+                }
+            });
+
+            // Display job details
+            const jobDetailsContent = document.getElementById('job-details-content');
+            if (jobDetailsContent) {
+                // Format salary information
+                const salary = job.salary ? job.salary : 'Not specified';
+
+                // Format date posted
+                let datePosted = 'Not specified';
+                if (job.date_posted) {
+                    try {
+                        const date = new Date(job.date_posted);
+                        if (!isNaN(date.getTime())) {
+                            datePosted = date.toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
+                        }
+                    } catch (e) {
+                        datePosted = job.date_posted; // Use as-is if cannot parse
+                    }
+                }
+
+                // Determine match badge class based on score
+                let matchBadgeClass = 'match-badge-low';
+
+                if (job.match_score >= 90) {
+                    matchBadgeClass = 'match-badge-high';
+                } else if (job.match_score >= 75) {
+                    matchBadgeClass = 'match-badge-medium';
+                } else if (job.match_score >= 60) {
+                    matchBadgeClass = 'match-badge-low';
+                } else {
+                    matchBadgeClass = 'match-badge-poor';
+                }
+
+                // Format job location (show Remote prominently)
+                const location = job.location ? job.location : 'Location not specified';
+                const locationClass = location.toLowerCase().includes('remote') ? 'job-location-remote' : '';
+
+                // Create HTML content for job details
+                jobDetailsContent.innerHTML = `
+                    <div class="job-details">
+                        <div class="mb-4 job-details-header">
+                            <h1 class="h3 job-details-title">${job.title || 'Untitled Job'}</h1>
+                            <div class="d-flex flex-wrap align-items-center job-details-meta mb-3">
+                                <span class="me-3 job-details-company"><i class="fas fa-building me-2"></i>${job.company || 'Unknown Company'}</span>
+                                <span class="me-3 job-details-location ${locationClass}"><i class="fas fa-map-marker-alt me-2"></i>${location}</span>
+                                <span class="me-3 job-details-date"><i class="fas fa-calendar me-2"></i>Posted: ${datePosted}</span>
+                                <span class="job-details-salary"><i class="fas fa-money-bill-wave me-2"></i>Salary: ${salary}</span>
+                            </div>
+
+                            <div class="mb-3 job-details-actions">
+                                <span class="badge ${matchBadgeClass} me-2">
+                                    ${job.match_score || 0}% Match
+                                </span>
+                                <a href="${job.url || '#'}" target="_blank" class="btn btn-sm btn-primary job-apply-btn">
+                                    <i class="fas fa-external-link-alt me-1"></i> Apply on Website
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="job-description mb-4">
+                            <h4 class="h5 job-section-title">Job Description</h4>
+                            <div class="job-section-content">
+                                ${job.description || 'No description available.'}
+                            </div>
+                        </div>
+
+                        <div class="job-requirements mb-4">
+                            <h4 class="h5 job-section-title">Requirements</h4>
+                            <div class="job-section-content">
+                                ${job.requirements && job.requirements.length > 0 ?
+                        `<ul class="job-requirements-list">
+                                        ${job.requirements.map(req => `<li>${req}</li>`).join('')}
+                                    </ul>` :
+                        '<p>No specific requirements listed.</p>'
+                    }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error displaying job details:', error);
+            this.showToast('Error', 'Failed to display job details');
+        }
+    },
+
     // Helper method to trigger CV analysis in the background without blocking UI
     async _triggerCvAnalysisInBackground(docId) {
         try {
             console.log(`Triggering background CV analysis for document ${docId}`);
-            
+
             // Show discreet notification that analysis is happening
             this.showToast('CV Analysis', 'Analyzing CV in background...');
-            
+
             // Call the Perplexity API to analyze the CV
             const result = await window.CVParser.analyzeDocument(docId);
-            
+
             if (result.success) {
                 console.log('CV Analysis complete:', result.analysis);
                 this.showToast('Analysis Complete', 'Your CV has been analyzed successfully.');
@@ -1325,13 +1644,16 @@ const DB = {
                         items.forEach(item => item.classList.remove('active'));
                         newDocItem.classList.add('active');
                     }
-                    
+
                     // Trigger CV analysis immediately after upload
                     this.showToast('Success', 'Analyzing CV...!');
-                    this._triggerCvAnalysisInBackground(result.document_id);
+
+                    setTimeout(() => {
+                        this._triggerCvAnalysisInBackground(result.document_id);
+                    }, 3000);
 
                     // Hide loading indicator (ensure it's hidden)
-                    this.hideLoadingState();
+                    // this.hideLoadingState();
                 }
             } catch (error) {
                 console.error('Error in file upload:', error);

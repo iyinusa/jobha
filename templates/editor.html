@@ -46,12 +46,19 @@
                 <div class="viewer-wrapper shadow-sm rounded-custom bg-white">
                     <div class="viewer-header p-3 border-bottom d-flex justify-content-between align-items-center">
                         <!-- Document tabs -->
-                        <ul class="nav nav-tabs border-bottom-0 mb-0">
+                        <ul class="nav nav-tabs border-bottom-0 mb-0" id="document-tabs">
                             <li class="nav-item">
                                 <a class="nav-link active" data-bs-toggle="tab" href="#cv-tab">Resume/CV</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#cover-letter-tab">Cover Letter</a>
+                            <!-- Job-related tabs (hidden by default) -->
+                            <li class="nav-item d-none job-tab">
+                                <a class="nav-link" data-bs-toggle="tab" href="#job-details-tab">Job Details</a>
+                            </li>
+                            <li class="nav-item d-none job-tab">
+                                <a class="nav-link" data-bs-toggle="tab" href="#ai-cv-tab">AI CV</a>
+                            </li>
+                            <li class="nav-item d-none job-tab">
+                                <a class="nav-link" data-bs-toggle="tab" href="#job-cover-letter-tab">Cover Letter</a>
                             </li>
                         </ul>
 
@@ -80,16 +87,37 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Cover Letter Tab Content -->
-                        <div class="tab-pane fade" id="cover-letter-tab">
-                            <div class="viewer-content" id="cover-letter-viewer">
-                                <!-- Empty state shown when no document is loaded -->
-                                <div class="document-content text-center empty-viewer-state">
+                        
+                        <!-- Job Details Tab (hidden by default) -->
+                        <div class="tab-pane fade" id="job-details-tab">
+                            <div class="viewer-content" id="job-details-viewer">
+                                <div class="document-content p-4" id="job-details-content">
+                                    <!-- Job details will be inserted here dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI CV Tab (hidden by default) -->
+                        <div class="tab-pane fade" id="ai-cv-tab">
+                            <div class="viewer-content" id="ai-cv-viewer">
+                                <div class="document-content text-center p-5">
                                     <div class="py-5">
-                                        <i class="fas fa-envelope fa-4x text-muted mb-3"></i>
-                                        <h3 class="h4">No Cover Letter Selected</h3>
-                                        <p class="text-muted mb-4">Select an existing cover letter from the sidebar</p>
+                                        <i class="fas fa-robot fa-4x text-muted mb-3"></i>
+                                        <h3 class="h4">Coming Soon</h3>
+                                        <p class="text-muted mb-4">AI-optimized CV for this job will be available soon</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Job Cover Letter Tab (hidden by default) -->
+                        <div class="tab-pane fade" id="job-cover-letter-tab">
+                            <div class="viewer-content" id="job-cover-letter-viewer">
+                                <div class="document-content text-center p-5">
+                                    <div class="py-5">
+                                        <i class="fas fa-envelope-open-text fa-4x text-muted mb-3"></i>
+                                        <h3 class="h4">Coming Soon</h3>
+                                        <p class="text-muted mb-4">Customized cover letter for this job will be available soon</p>
                                     </div>
                                 </div>
                             </div>
@@ -106,52 +134,18 @@
                     </div>
                     <div class="panel-body">
                         <div class="job-list">
-                            <div class="list-group list-group-flush">
-                                <a href="#" class="list-group-item list-group-item-action p-3">
-                                    <h6 class="mb-1">Senior Marketing Specialist</h6>
-                                    <p class="mb-1 small">Digital Marketing Agency</p>
-                                    <div class="d-flex justify-content-between align-items-center small">
-                                        <span><i class="fas fa-map-marker-alt me-1"></i> New York, NY</span>
-                                        <span class="badge bg-success">95% Match</span>
-                                    </div>
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action p-3">
-                                    <h6 class="mb-1">Digital Marketing Manager</h6>
-                                    <p class="mb-1 small">Global Brands Inc.</p>
-                                    <div class="d-flex justify-content-between align-items-center small">
-                                        <span><i class="fas fa-map-marker-alt me-1"></i> Remote</span>
-                                        <span class="badge bg-primary">87% Match</span>
-                                    </div>
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action p-3">
-                                    <h6 class="mb-1">Content Marketing Specialist</h6>
-                                    <p class="mb-1 small">Tech Innovators Ltd.</p>
-                                    <div class="d-flex justify-content-between align-items-center small">
-                                        <span><i class="fas fa-map-marker-alt me-1"></i> Boston, MA</span>
-                                        <span class="badge bg-primary">82% Match</span>
-                                    </div>
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action p-3">
-                                    <h6 class="mb-1">Social Media Strategist</h6>
-                                    <p class="mb-1 small">Creative Solutions Co.</p>
-                                    <div class="d-flex justify-content-between align-items-center small">
-                                        <span><i class="fas fa-map-marker-alt me-1"></i> San Francisco, CA</span>
-                                        <span class="badge bg-primary">78% Match</span>
-                                    </div>
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action p-3">
-                                    <h6 class="mb-1">Marketing Coordinator</h6>
-                                    <p class="mb-1 small">Future Media Group</p>
-                                    <div class="d-flex justify-content-between align-items-center small">
-                                        <span><i class="fas fa-map-marker-alt me-1"></i> Chicago, IL</span>
-                                        <span class="badge bg-secondary">65% Match</span>
-                                    </div>
-                                </a>
+                            <div class="list-group list-group-flush" id="job-container">
+                                <!-- Jobs will be loaded here dynamically -->
+                                <div class="text-center p-4 text-muted" id="no-jobs-message">
+                                    <i class="fas fa-briefcase fa-2x mb-3 opacity-50"></i>
+                                    <p>No matching jobs found yet</p>
+                                    <p class="small">Click "AI Job Matching" to search</p>
+                                </div>
                             </div>
                         </div>
                         <div class="p-3 border-top mt-auto">
-                            <button class="btn btn-outline-primary w-100">
-                                <i class="fas fa-search me-2"></i> Find Matching Jobs
+                            <button class="btn btn-outline-primary w-100" id="find-jobs-btn">
+                                <i class="fas fa-search me-2"></i> AI Job Matching
                             </button>
                         </div>
                     </div>
@@ -243,6 +237,26 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p id="upload-status-text">Processing your document...</p>
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Search Processing Modal -->
+<div class="modal fade" id="jobSearchModal" tabindex="-1" aria-labelledby="jobSearchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jobSearchModalLabel">Searching for Jobs</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p id="job-search-status-text">Analyzing your CV and searching for matching jobs...</p>
                 <div class="progress mt-3">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
                 </div>
