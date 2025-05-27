@@ -48,6 +48,7 @@ uploads/
 *.sqlite
 *.db
 *.sql
+data/db.json
 
 # IDEs and editors
 .idea/

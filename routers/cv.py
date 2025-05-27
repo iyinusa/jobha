@@ -1,13 +1,15 @@
-from fastapi import APIRouter, UploadFile, HTTPException, File, Form, Path, Body, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, UploadFile, HTTPException, File, Form, Path, Body, Query, BackgroundTasks
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, AsyncIterator
 import os
 import uuid
 import json
 import logging
 from pathlib import Path as FilePath
 from datetime import datetime
+import asyncio
+from sse_starlette.sse import EventSourceResponse
 
 # Import database service
 from services.database.json_db import db
@@ -438,7 +440,6 @@ async def get_document_keywords(doc_id: str = Path(..., title="Document ID")):
         raise HTTPException(status_code=500, detail=f"Error retrieving document keywords: {str(e)}")
 
 # INTEGRATED JOB SEARCH FUNCTIONALITY
-
 @router.post("/documents/{doc_id}/search-jobs", response_model=JobListResponse)
 async def search_jobs_with_document(doc_id: str = Path(..., title="Document ID")):
     """
@@ -544,3 +545,247 @@ async def get_document_jobs(
     except Exception as e:
         logger.error(f"Could not retrieve jobs: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Could not retrieve jobs: {str(e)}")
+
+# Stream job search results
+@router.get("/documents/{doc_id}/search-jobs/stream")
+async def stream_jobs_search(
+    background_tasks: BackgroundTasks,
+    doc_id: str = Path(..., title="Document ID")
+):
+    """
+    Stream job search results as server-sent events.
+    This endpoint performs background job searching and streams results in real-time.
+    Clients can use the EventSource API to receive updates as they happen.
+    """
+    async def job_search_generator() -> AsyncIterator[str]:
+        """Generate server-sent events with job data"""
+        try:
+            # First, verify the document exists
+            doc = db.get_document(doc_id)
+            if not doc:
+                yield f"data: {json.dumps({'error': f'Document with ID {doc_id} not found'})}\n\n"
+                return
+                
+            # Get document analysis
+            doc_analysis = db.get_document_keywords(doc_id)
+            if not doc_analysis:
+                yield f"data: {json.dumps({'error': 'Document not analyzed yet. Please click on AI Analysis first.'})}\n\n"
+                return
+            
+            # Get the primary search keyword (first item from job_search_keywords)
+            primary_search_keyword = None
+            if doc_analysis.get("job_search_keywords") and doc_analysis.get("job_search_keywords")[0]:
+                primary_search_keyword = doc_analysis.get("job_search_keywords")[0]
+                logger.info(f"Using primary search keyword: {primary_search_keyword}")
+            
+            # If no primary keyword found, use fallback approach with combined keywords
+            if not primary_search_keyword:
+                # Extract keywords for job search the traditional way
+                keywords = []
+                
+                if doc_analysis.get("job_search_keywords"):
+                    keywords.extend(doc_analysis.get("job_search_keywords"))
+                
+                if doc_analysis.get("skills"):
+                    keywords.extend(doc_analysis.get("skills"))
+                    
+                if doc_analysis.get("job_titles"):
+                    keywords.extend(doc_analysis.get("job_titles"))
+                    
+                # Remove duplicates and limit keywords
+                keywords = list(dict.fromkeys([k for k in keywords if k]))[:20]
+                
+                if not keywords:
+                    yield f"data: {json.dumps({'error': 'Could not extract keywords from document'})}\n\n"
+                    return
+            else:
+                # Use all keywords for match scoring but primary one for search
+                keywords = [primary_search_keyword]
+                if doc_analysis.get("job_search_keywords") and len(doc_analysis.get("job_search_keywords")) > 1:
+                    keywords.extend(doc_analysis.get("job_search_keywords")[1:])
+            
+            # Setup queue for jobs found
+            job_queue = asyncio.Queue()
+            
+            # Flags for search state
+            search_complete = asyncio.Event()
+            search_error = None
+            
+            # Get the current event loop for thread-safe operations 
+            loop = asyncio.get_running_loop()
+
+            # Load websites from the JSON file for display in UI
+            websites_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                                       "data", "websites.json")
+            websites = []
+            try:
+                with open(websites_path, 'r') as f:
+                    websites = json.load(f)
+            except Exception as e:
+                logger.warning(f"Failed to load websites.json: {str(e)}")
+                websites = ["indeed.com", "glassdoor.com", "simplyhired.com", "dice.com"]
+            
+            # Callback function to receive jobs as they're found
+            def job_callback(jobs, is_complete=False, error=None):
+                logger.info(f"Job callback received {len(jobs)} jobs, is_complete={is_complete}, error={error}")
+                
+                # Safe version using the event loop directly
+                try:
+                    # Add jobs to queue
+                    for job in jobs:
+                        loop.call_soon_threadsafe(
+                            lambda j=job: asyncio.create_task(job_queue.put(j))
+                        )
+                    
+                    # Mark search as complete if indicated
+                    if is_complete or error:
+                        nonlocal search_error
+                        if error:
+                            search_error = error
+                        loop.call_soon_threadsafe(search_complete.set)
+                
+                except Exception as e:
+                    logger.error(f"Error in job callback (thread safety): {str(e)}")
+            
+            # Start job search in background with extended timeout
+            background_tasks.add_task(
+                perplexity_api.search_jobs,
+                keywords,
+                doc_id,
+                job_callback
+            )
+            
+            # Send initial message with search information for UI display
+            if primary_search_keyword:
+                logger.info(f"Starting job search with primary keyword: {primary_search_keyword}")
+                yield f"data: {json.dumps({'status': 'started', 'message': 'Starting job search...', 'primary_keyword': primary_search_keyword, 'keywords': keywords})}\n\n"
+            else:
+                logger.info(f"Starting job search with keywords: {keywords}")
+                yield f"data: {json.dumps({'status': 'started', 'message': 'Starting job search...', 'keywords': keywords})}\n\n"
+            
+            # Send websites information for UI display
+            yield f"data: {json.dumps({'status': 'searching', 'message': 'Initializing job search...', 'websites': websites[:10]})}\n\n"
+            
+            # Counter for progress updates and timeout handling
+            jobs_found = 0
+            last_job_time = datetime.now()
+            overall_timeout = 40  # Maximum time to wait for the entire search (seconds)
+            
+            # Track start time for overall timeout
+            start_time = datetime.now()
+            
+            # Wait for jobs to arrive and send them to client
+            while not search_complete.is_set():
+                try:
+                    # Check if we've exceeded the maximum overall wait time
+                    elapsed_time = (datetime.now() - start_time).total_seconds()
+                    if elapsed_time > overall_timeout:
+                        logger.warning(f"Maximum overall wait time of {overall_timeout}s exceeded for job search")
+                        break
+                    
+                    # Try to get a job from the queue with timeout
+                    try:
+                        job = await asyncio.wait_for(job_queue.get(), timeout=2.0)
+                        jobs_found += 1
+                        last_job_time = datetime.now()
+                        
+                        # Add job source information for UI display
+                        job_source = "Unknown source"
+                        if job.get("url"):
+                            url = job.get("url")
+                            for site in websites:
+                                if isinstance(site, str) and site.lower() in url.lower():
+                                    job_source = site
+                                    break
+                        
+                        # Include AI match information in the response
+                        match_score = job.get('match_score', 0)
+                        if match_score is None:  # Ensure match_score is not None
+                            match_score = 0
+                            
+                        # Sanitize job data to ensure it can be serialized to JSON
+                        sanitized_job = {}
+                        for k, v in job.items():
+                            # Only include serializable data types
+                            if isinstance(v, (str, int, float, bool, list, dict)) or v is None:
+                                sanitized_job[k] = v
+                            else:
+                                # Convert non-serializable types to string representation
+                                sanitized_job[k] = str(v)
+                            
+                        # Fix the unterminated string literal by rewriting the f-string on a single line
+                        yield f"data: {json.dumps({'job': sanitized_job, 'jobs_count': jobs_found, 'source': job_source, 'match_score': match_score, 'match_quality': get_match_quality_label(match_score)})}\n\n"
+                        
+                        # Simple job count logging
+                        logger.info(f"Job count: {jobs_found}")
+                        
+                        # If we've found enough jobs, we can consider it a success but don't
+                        # terminate early - keep going until the search is marked complete
+                        if jobs_found == 25:  # Use exact comparison to prevent multiple notifications
+                            logger.info(f"Found {jobs_found} jobs, which is sufficient")
+                            # Send a one-time notification that we have enough results
+                            try:
+                                yield f"data: {json.dumps({'status': 'sufficient', 'message': f'Found {jobs_found} jobs matching your profile'})}\n\n"
+                            except Exception as e:
+                                logger.error(f"Error sending sufficient notification: {str(e)}")
+                    except asyncio.TimeoutError:
+                        # Check time since last job was found
+                        time_since_last_job = (datetime.now() - last_job_time).total_seconds()
+                        
+                        # Send a keepalive ping - make message more informative based on time
+                        if time_since_last_job > 20:
+                            # Still searching but taking a while
+                            yield f"data: {json.dumps({'status': 'searching', 'message': f'Still searching for jobs matching your profile (found {jobs_found} so far)...', 'progress': 'Deep scanning job websites for optimal matches...', 'primary_keyword': primary_search_keyword if primary_search_keyword else None})}\n\n"
+                        else:
+                            # Normal progress update with rotating messages
+                            progress_messages = [
+                                "Scanning job listings...",
+                                "Analyzing job requirements...",
+                                "Matching skills to openings...",
+                                "Evaluating job compatibility...",
+                                "Filtering for best matches...",
+                                "Calculating AI match scores...",
+                                "Finding ideal career opportunities..."
+                            ]
+                            # Pick a progress message based on time
+                            progress_idx = int(time_since_last_job) % len(progress_messages)
+                            progress_message = progress_messages[progress_idx]
+                            
+                            yield f"data: {json.dumps({'status': 'searching', 'message': f'Found {jobs_found} jobs so far...', 'progress': progress_message, 'primary_keyword': primary_search_keyword if primary_search_keyword else None})}\n\n"
+                except Exception as e:
+                    logger.error(f"Error while waiting for jobs: {str(e)}")
+                    break
+            
+            # Send completion message based on results
+            if search_error:
+                logger.error(f"Job search completed with error: {search_error}")
+                yield f"data: {json.dumps({'status': 'error', 'message': f'Search encountered an error: {search_error}',  'total': jobs_found})}\n\n"
+            else:
+                if jobs_found > 0:
+                    logger.info(f"Job search completed successfully with {jobs_found} jobs")
+                    yield f"data: {json.dumps({'status': 'completed', 'message': 'Job search completed successfully', 'total': jobs_found, 'primary_keyword': primary_search_keyword if primary_search_keyword else None})}\n\n"
+                else:
+                    logger.info("Job search completed but found no jobs")
+                    yield f"data: {json.dumps({'status': 'completed', 'message': 'Job search completed but no matches found', 'total': 0,'primary_keyword': primary_search_keyword if primary_search_keyword else None})}\n\n"
+        
+        except Exception as e:
+            logger.error(f"Error in job search generator: {str(e)}")
+            yield f"data: {json.dumps({'error': f'Job search error: {str(e)}'})}\n\n"
+    
+    # Return the generator as a streaming response
+    return EventSourceResponse(job_search_generator())
+
+def get_match_quality_label(score: int) -> str:
+    """Helper function to get a label for the match quality"""
+    try:
+        score_int = int(score)  # Convert to integer safely
+        if score_int >= 90:
+            return "excellent"
+        elif score_int >= 75:
+            return "good"
+        elif score_int >= 60:
+            return "moderate"
+        else:
+            return "low"
+    except (ValueError, TypeError):
+        return "unknown"  # Handle cases where score can't be converted to int

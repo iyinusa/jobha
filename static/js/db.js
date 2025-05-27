@@ -778,7 +778,7 @@ const DB = {
         }
     },
 
-    // Find matching jobs based on active CV document
+    // Find matching jobs based on active CV document with real-time streaming updates
     async findMatchingJobs() {
         try {
             // Get the active document ID
@@ -797,45 +797,319 @@ const DB = {
                 return;
             }
 
-            // Show job search modal
-            const jobSearchModal = new bootstrap.Modal(document.getElementById('jobSearchModal'));
-            jobSearchModal.show();
+            // Update the job-container to show loading state with enhanced UI
+            if (this.jobContainer) {
+                this.jobContainer.innerHTML = `
+                    <div class="search-progress-container p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <span class="search-status-text">Analyzing your CV...</span>
+                        </div>
+                        
+                        <div class="progress mb-3" style="height: 6px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                role="progressbar" style="width: 100%"></div>
+                        </div>
+                        
+                        <!-- Enhanced job search insights container -->
+                        <div class="job-search-insights small text-muted mb-3">
+                            <div id="search-keywords-container" class="mb-2 d-none">
+                                <strong><i class="fas fa-tags me-1"></i> Search Keywords:</strong>
+                                <span id="search-keywords"></span>
+                            </div>
+                            <div id="search-websites-container" class="mb-2 d-none">
+                                <strong><i class="fas fa-globe me-1"></i> Searching On:</strong>
+                                <span id="search-websites"></span>
+                            </div>
+                            <div id="search-progress-container" class="d-none">
+                                <strong><i class="fas fa-sync me-1"></i> Status:</strong>
+                                <span id="search-progress-text"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="job-search-results mt-4"></div>
+                    </div>
+                `;
+            }
 
             try {
-                // Call the API to search for jobs (updated endpoint)
-                const response = await fetch(`/api/cv/documents/${docId}/search-jobs`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                // Using EventSource for Server-Sent Events
+                const eventSource = new EventSource(`/api/cv/documents/${docId}/search-jobs/stream`);
+                
+                // Track found jobs
+                const foundJobs = [];
+                const resultsContainer = this.jobContainer.querySelector('.job-search-results');
+                const statusText = this.jobContainer.querySelector('.search-status-text');
+                const searchKeywordsContainer = document.getElementById('search-keywords-container');
+                const searchKeywordsText = document.getElementById('search-keywords');
+                const searchWebsitesContainer = document.getElementById('search-websites-container');
+                const searchWebsitesText = document.getElementById('search-websites');
+                const searchProgressContainer = document.getElementById('search-progress-container');
+                const searchProgressText = document.getElementById('search-progress-text');
+                
+                // Handle incoming job events
+                eventSource.onmessage = (event) => {
+                    try {
+                        // Parse data - wrapped in try-catch to handle potential JSON parsing errors
+                        const data = JSON.parse(event.data);
+                        
+                        // Handle different message types
+                        if (data.error) {
+                            // Error occurred
+                            console.error('Job search error:', data.error);
+                            if (statusText) {
+                                statusText.textContent = `Error: ${data.error}`;
+                                statusText.classList.add('text-danger');
+                            }
+                            eventSource.close();
+                            
+                            // Show error directly in the container
+                            if (resultsContainer) {
+                                resultsContainer.innerHTML = `
+                                    <div class="alert alert-danger mt-3">
+                                        <p><i class="fas fa-exclamation-circle me-2"></i>Job search failed</p>
+                                        <p class="small">${data.error}</p>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Clear loading spinner after a moment
+                            setTimeout(() => {
+                                const spinner = this.jobContainer.querySelector('.spinner-border');
+                                if (spinner) spinner.remove();
+                                
+                                // Add retry button
+                                if (resultsContainer) {
+                                    resultsContainer.innerHTML += `
+                                        <button class="btn btn-sm btn-outline-primary mt-3" id="retry-job-search">
+                                            <i class="fas fa-sync me-2"></i> Try Again
+                                        </button>
+                                    `;
+                                    
+                                    // Add retry button functionality
+                                    const retryBtn = document.getElementById('retry-job-search');
+                                    if (retryBtn) {
+                                        retryBtn.addEventListener('click', () => {
+                                            this.findMatchingJobs();
+                                        });
+                                    }
+                                }
+                            }, 1000);
+                            
+                            return;
+                        }
+                        
+                        if (data.status === 'started') {
+                            // Search started - show keywords if available
+                            if (statusText) {
+                                statusText.textContent = data.message;
+                            }
+                            
+                            if (data.keywords && data.keywords.length > 0) {
+                                searchKeywordsContainer.classList.remove('d-none');
+                                searchKeywordsText.textContent = data.keywords.join(', ');
+                            }
+                            
+                            return;
+                        }
+                        
+                        if (data.status === 'searching') {
+                            // Update progress
+                            if (statusText) {
+                                statusText.textContent = data.message;
+                            }
+                            
+                            if (data.websites && data.websites.length > 0) {
+                                searchWebsitesContainer.classList.remove('d-none');
+                                searchWebsitesText.textContent = data.websites.slice(0, 5).join(', ') + 
+                                    (data.websites.length > 5 ? ', ...' : '');
+                            }
+                            
+                            if (data.progress) {
+                                searchProgressContainer.classList.remove('d-none');
+                                searchProgressText.textContent = data.progress;
+                            }
+                            
+                            return;
+                        }
+                        
+                        if (data.status === 'completed') {
+                            // Search completed
+                            if (statusText) {
+                                statusText.textContent = `${data.message}: Found ${data.total || foundJobs.length} jobs`;
+                                statusText.classList.add('text-success');
+                            }
+                            
+                            // Update progress container
+                            searchProgressContainer.classList.remove('d-none');
+                            searchProgressText.textContent = "Search completed";
+                            searchProgressText.classList.add('text-success');
+                            
+                            // Close event source
+                            eventSource.close();
+                            
+                            // Show success message and remove progress bar
+                            setTimeout(() => {
+                                // Remove the progress bar container once search is complete
+                                const progressContainer = this.jobContainer.querySelector('.progress');
+                                if (progressContainer) progressContainer.remove();
+                                
+                                // Remove spinner but keep status text
+                                const spinner = this.jobContainer.querySelector('.spinner-border');
+                                if (spinner) spinner.remove();
+                                
+                                // Show success message
+                                this.showToast('Success', `Found ${foundJobs.length} matching jobs!`);
+                                
+                                // If no jobs found, show message
+                                if (foundJobs.length === 0) {
+                                    if (resultsContainer) {
+                                        resultsContainer.innerHTML = `
+                                            <div class="text-center p-3 text-muted">
+                                                <i class="fas fa-search fa-2x mb-3 opacity-50"></i>
+                                                <p>No matching jobs found</p>
+                                                <button class="btn btn-sm btn-outline-primary mt-2" id="retry-job-search">
+                                                    <i class="fas fa-sync me-2"></i> Try Again
+                                                </button>
+                                            </div>
+                                        `;
+                                        
+                                        // Add retry button functionality
+                                        const retryBtn = document.getElementById('retry-job-search');
+                                        if (retryBtn) {
+                                            retryBtn.addEventListener('click', () => {
+                                                this.findMatchingJobs();
+                                            });
+                                        }
+                                    }
+                                }
+                            }, 1000);
+                            
+                            return;
+                        }
+                        
+                        if (data.job) {
+                            // A new job has been found!
+                            foundJobs.push(data.job);
+                            
+                            // Update status with job count
+                            if (statusText) {
+                                statusText.textContent = `Found ${foundJobs.length} matching jobs so far...`;
+                            }
+                            
+                            // Update progress status
+                            if (searchProgressText) {
+                                searchProgressContainer.classList.remove('d-none');
+                                searchProgressText.textContent = `Processing job from ${data.job.company || 'unknown company'}...`;
+                            }
+                            
+                            // Ensure the results container exists and the 'no jobs' message is removed
+                            if (!resultsContainer.querySelector('.job-results-list')) {
+                                resultsContainer.innerHTML = `<div class="job-results-list"></div>`;
+                                // Hide "No jobs" message if it exists
+                                const noJobsMessage = document.getElementById('no-jobs-message');
+                                if (noJobsMessage) {
+                                    noJobsMessage.style.display = 'none';
+                                }
+                            }
+                            
+                            // Add job to the results container with animation
+                            this.addJobToContainer(data.job, resultsContainer.querySelector('.job-results-list'));
+                        }
+                    } catch (jsonError) {
+                        console.error('Error parsing server event data:', jsonError);
                     }
-                });
-
-                // Hide the modal regardless of result
-                jobSearchModal.hide();
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Job search failed');
-                }
-
-                const result = await response.json();
-
-                if (result.success && result.jobs && result.jobs.length > 0) {
-                    // Load the jobs into the job container
-                    this.loadJobsForDocument(docId);
-                    this.showToast('Success', `Found ${result.jobs_count} matching jobs!`);
-                } else {
-                    this.showToast('Info', result.message || 'No matching jobs found. Select CV and Click "AI Job Matching"');
-                }
+                };
+                
+                // Handle connection open
+                eventSource.onopen = () => {
+                    console.log('Job search stream connected');
+                    searchProgressContainer.classList.remove('d-none');
+                    searchProgressText.textContent = "Connection established, starting search...";
+                };
+                
+                // Handle errors
+                eventSource.onerror = (error) => {
+                    console.error('EventSource error:', error);
+                    eventSource.close();
+                    
+                    // Show error in job container
+                    if (statusText) {
+                        statusText.textContent = 'Connection error during job search';
+                        statusText.classList.add('text-danger');
+                    }
+                    
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = `
+                            <div class="alert alert-danger mt-3">
+                                <p><i class="fas fa-exclamation-circle me-2"></i>Connection error</p>
+                                <p class="small">The job search connection was interrupted. Please try again.</p>
+                                <button class="btn btn-sm btn-outline-danger mt-2" id="retry-job-search">
+                                    <i class="fas fa-sync me-2"></i> Retry
+                                </button>
+                            </div>
+                        `;
+                        
+                        // Add retry button functionality
+                        const retryBtn = document.getElementById('retry-job-search');
+                        if (retryBtn) {
+                            retryBtn.addEventListener('click', () => {
+                                this.findMatchingJobs();
+                            });
+                        }
+                    }
+                };
+                
             } catch (error) {
-                jobSearchModal.hide();
-                console.error('Job search error:', error);
+                console.error('Error finding matching jobs:', error);
                 this.showToast('Error', `Job search failed: ${error.message}`);
+                
+                // Show error in job container
+                if (this.jobContainer) {
+                    this.jobContainer.innerHTML = `
+                        <div class="alert alert-danger m-3">
+                            <p><i class="fas fa-exclamation-circle me-2"></i>Job search failed</p>
+                            <p class="small">${error.message}</p>
+                            <button class="btn btn-sm btn-outline-danger mt-2" id="retry-job-search">
+                                <i class="fas fa-sync me-2"></i> Retry
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add retry button functionality
+                    const retryBtn = document.getElementById('retry-job-search');
+                    if (retryBtn) {
+                        retryBtn.addEventListener('click', () => {
+                            this.findMatchingJobs();
+                        });
+                    }
+                }
             }
         } catch (error) {
-            console.error('Error finding matching jobs:', error);
+            console.error('Error in findMatchingJobs:', error);
             this.showToast('Error', `Job search failed: ${error.message}`);
         }
+    },
+    
+    // Add a job to the container with animation
+    addJobToContainer(job, container) {
+        // Use the specified container or fall back to the default jobContainer
+        const targetContainer = container || this.jobContainer;
+        if (!targetContainer) return;
+        
+        // Create job item
+        const jobItem = this.createJobListItem(job);
+        
+        // Add animation classes
+        jobItem.classList.add('new-job-animation');
+        
+        // Add to container
+        targetContainer.appendChild(jobItem);
+        
+        // Trigger animation
+        setTimeout(() => {
+            jobItem.classList.add('show');
+        }, 50);
     },
 
     // Load jobs for a specific document
@@ -854,7 +1128,7 @@ const DB = {
                 </div>
             `;
 
-            // Fetch jobs for the document (updated endpoint)
+            // Fetch jobs for the document
             const response = await fetch(`/api/cv/documents/${docId}/jobs?limit=50`);
 
             if (!response.ok) {
@@ -1727,7 +2001,7 @@ const DB = {
             } catch (error) {
                 console.error('Error removing loading overlay:', error);
                 // Force remove all loading overlays as fallback
-                document.querySelectorAll('#loading-overlay').forEach(overlay => {
+                document.querySelectorAll('#loading-overlay').forEach( overlay => {
                     if (overlay.parentNode) {
                         overlay.parentNode.removeChild(overlay);
                     }
