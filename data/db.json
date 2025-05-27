@@ -1,5 +1,191 @@
 {
-  "documents": [],
-  "documents_keywords": [],
-  "documents_jobs": []
+  "documents": [
+    {
+      "id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "name": "Idowu-Kennedy-Yinusa-CV",
+      "category": "cv",
+      "type": "pdf",
+      "file_path": "uploads/1890b2ed-0133-4f0f-8358-5db3869f0976.pdf",
+      "content": "IDOWU KENNEDY YINUSA Software Engineer Edinburgh, Scotland iyinusa@yahoo.co.uk +44 7831 500816 https://linkedin.com/in/iyinusa https://iyinusa.com OVERVIEW Software Engineer with over 8 years of experience using PHP, MySQL, Flutter/Dart, JavaScript, and Python. I have a proven track record of delivering high-quality product-led solutions using various methodologies and best practices. A Professional Member of the British Computer Society (MBCS). EDUCATION MSc. in Computing (major: Software Engineering), Sep 2023 Oct 2024 Edinburgh Napier University, UK HND in Computer Science, Nov 2019 Oct 2011 Lagos State University of Science and Technology (formerly Lagos State Polytechnic), Nigeria OND in Computer Science, Oct 2006 Sep 2008 Lagos State University of Science and Technology (formerly Lagos State Polytechnic), Nigeria WORK EXPERIENCE Tehilah Base Digital COO / Tech Lead (Kanban CMS Firebase NoSQL PHP Flutter REST APIs SQL JavaScript Project Management) Full-time, Nigeria Sep 2013 Sep 2023 Responsible for company strategic operations and effective management of clients and staff for best productivity and satisfaction. Developed and managed the broadband/internet billing portal for managing clients' records, subscriptions, expiration reminders/notifications, quota usage matrix, retention ratio (used for ensuring over 85% customer retention), and online subscription payments. Developed and managed an InsureTech solution for a client to help customers easily purchase insurance covers/policies. Developed and managed an internal operation management portal for employee task scheduling and management, KPI (Key Performance Indicator), requisition management, document management, and more. Led a team of 4 to develop and maintain a stockbroker s institution portal to enable them to manage/collect membership annual dues which helped in recovering 62.5% of annual dues backlogs of 5 years in 2 months. Shawali Intercontinental Trading Co. Ltd CTO (Kanban PHP Flutter REST APIs SQL Google APIs JavaScript) Contracts, Nigeria May 2016 Sep 2023 Developed and managed a non-profit humanitarian portal that allows donors to create support tickets and funding for the less privileged. Developed and managed a water and grocery e-commerce platform that enables customers to easily find and purchase from vendors closer to them. Responsible for application development and server scaling. Responsible for Google Developer Account creation, app store listing setup, publishing, and maintenance of app in Google PlayStore. Super-head all project resources, recruiting, and maintenance. Kondar Global Solutions Ltd Technical Partner (Bootstrap PHP CodeIgniter JavaScript MySQL) Part-time, Canada Apr 2022 Jul 2022 Responsible for onboarding spare part vendors in Nigeria on the KondarSoft SaaS e- commerce platform. Responsible for technical integration and support for clients' stores. JovFlu LLC Mobile Engineer (Firebase Google APIs PHP Flutter REST APIs SQL) Freelance, USA Apr 2021 Jul 2021 Designed the UI/UX of the dating platform. Responsible for creating the RESTful API/microservices. Set up the Firebase Auth, Firestore Database, Storage, etc. Responsible for the creation of the Google Developer Account, created store listing, billing, and taxing, In-app purchases, and published app to the Playstore. Responsible for the creation of the Apple Developer Account, set up account, billing and taxing, In-app purchases, and publishing of the app to the App Store Connect. SBMark Consulting LLC WordPress Engineer (WooCommerce WordPress PHP JavaScript) Freelance, USA Nov 2020 Jan 2021 Responsible for the design and deployment of the career support platform. Installed and configured the WordPress website template and plugins. Set up and configured third-party integration such as Calendly, Live Chart, and YouTube Video API. Deployed the website on the shared hosting, and configured email accounts. Quaflux Limited Project Manager/Tech Lead (Bitbucket Amazon Web Services (AWS) Kanban PHP MySQL) Kanban PHP MySQL Contract, Nigeria Jul 2015 Sep 2015 Designed the UI/UX of the dating platform. Responsible for creating the RESTful API/microservices. Set up the Firebase Auth, Firestore Database, Storage, etc. Responsible for the creation of the Google Developer Account, created store listing, billing, and taxing, In-app purchases, and published app to the Playstore. Responsible for the creation of the Apple Developer Account, set up account, billing and taxing, In-app purchases, and publishing of the app to App Store Connect. LICENSES & CERTIFICATIONS Python for Data Science Jan 2024 IBM AWS Fundamentals - Addressing Security Risk Oct 2022 Coursera Google Developer Alumni Jan 2022 Google Inc. Google Playstore Certified Jan 2022 Google Inc. LigoWave Certified Engineer May 2019 LigoWave Certified LigoNFT-2 - Infinity Wireless Networking and LigoDLB-2/LigoPTP-2 - Wireless Networking Facebook Messager (Chatbot) Certified Apr 2017 Facebook/Meta CodeIgniter (PHP MVC) Certified Apr 2016 Udemy Effective Leadership Jun 2014 HP HONOURS & AWARDS Top 50 Thought Leaders in EdTech Jan 2023 Thinker360: Top 50 thought leaders and influencers in this category based on their personally authored content, awards, and recognition. Excellent Award Jan 2015 The Top Executives: Top Executives in the IT and Software Industry 2015, Award of Excellence 2015 . Meritorious Award Feb 2014 NACOSS, Lagos State Polytechnic: Most Supportive IT Firm for immense contribution and effort toward the progress of the Nigeria Association of Computer Students, Lagos State Polytechnic 2013/2014 Session. Best IT Personnel Oct 2011 The Department of Computer Science, Lagos State Polytechnic: Recognition award presented as the Best IT Personnel 2010/2011 academic session for contribution to the association and academic growth. Software Director Nov 2010 NACOSS, Lagos State Polytechnic: Appointed as the Software Director for the Nigerian Association of Computer Science Students, Lagos State Polytechnic Chapter.",
+      "modified": "2025-05-06T23:07:11.571047",
+      "created_at": "2025-05-06T23:07:11.575455",
+      "updated_at": "2025-05-06T23:07:15.169900"
+    }
+  ],
+  "documents_keywords": [
+    {
+      "skills": [
+        "PHP",
+        "MySQL",
+        "Flutter/Dart",
+        "JavaScript",
+        "Python",
+        "Firebase",
+        "REST APIs",
+        "Google APIs",
+        "AWS",
+        "Kanban",
+        "CodeIgniter",
+        "WordPress",
+        "UI/UX Design",
+        "Project Management"
+      ],
+      "job_titles": [
+        "Software Engineer",
+        "COO/Tech Lead",
+        "CTO",
+        "Technical Partner",
+        "Mobile Engineer",
+        "WordPress Engineer",
+        "Project Manager/Tech Lead"
+      ],
+      "industries": [
+        "InsurTech",
+        "E-commerce",
+        "Telecommunications",
+        "Non-profit",
+        "EdTech",
+        "Dating Platforms"
+      ],
+      "years_experience": 8,
+      "education_level": "MSc",
+      "education_field": "Software Engineering",
+      "certifications": [
+        "IBM Python for Data Science (2024)",
+        "Coursera AWS Fundamentals (2022)",
+        "Google Developer Alumni (2022)",
+        "Google Playstore Certified (2022)",
+        "LigoWave Certified Engineer (2019)",
+        "Facebook Chatbot Certified (2017)",
+        "Udemy CodeIgniter Certified (2016)"
+      ],
+      "languages": [
+        "English"
+      ],
+      "key_achievements": [
+        "Developed broadband billing portal achieving 85%+ customer retention",
+        "Recovered 62.5% of 5-year membership dues backlog in 2 months",
+        "Created humanitarian portal handling donor funding systems",
+        "Built water/grocery e-commerce platform with geolocation features",
+        "Published apps on both Google PlayStore and Apple App Store"
+      ],
+      "job_search_keywords": [
+        "Full-stack development",
+        "Technical leadership",
+        "Cross-platform mobile apps",
+        "Cloud infrastructure",
+        "Agile project management",
+        "Team mentoring",
+        "SDLC implementation"
+      ],
+      "analyzed_at": "2025-05-06T23:07:35.370611",
+      "document_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "updated_at": "2025-05-06T23:07:35.393312",
+      "created_at": "2025-05-06T23:07:35.393324"
+    }
+  ],
+  "documents_jobs": [
+    {
+      "title": "Senior .NET Developer \u2013 UI/UX-Focused Cybersecurity Modernization (Full Stack)",
+      "company": "Bestop",
+      "location": "Remote",
+      "description": "Urgently hiring Remote position requiring strong full-stack development experience with .NET Core and Blazor-based architecture. Focus on secure, high-performance application design.",
+      "requirements": [
+        "Strong full-stack development experience",
+        "Commitment to secure application design",
+        "Proficiency with .NET Core and Blazor"
+      ],
+      "match_score": 74,
+      "url": "https://www.indeed.com/q-full-stack-web-developer-jobs.html",
+      "date_posted": null,
+      "salary": null,
+      "doc_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "search_timestamp": "2025-05-07T18:59:59.226843"
+    },
+    {
+      "title": "Full Stack Developer",
+      "company": "Citi",
+      "location": "Tampa, FL",
+      "description": "Intermediate role developing applications using Java, UI Frameworks, Microservices, Angular, React, and Oracle. Requires 5-8 years of experience in full-stack development.",
+      "requirements": [
+        "5-8 years of application development experience",
+        "Java, Angular, React, Spring Boot",
+        "Unix environment proficiency"
+      ],
+      "match_score": 74,
+      "url": "https://www.indeed.com/q-full-stack-developer-l-tampa,-fl-jobs.html",
+      "date_posted": null,
+      "salary": null,
+      "doc_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "search_timestamp": "2025-05-07T18:59:59.227928"
+    },
+    {
+      "title": "Full Stack Ruby on Rails Developer",
+      "company": "Debt Consultants Group",
+      "location": "Miami, FL",
+      "description": "Develop UI components using Ruby on Rails, JavaScript, Node.js, React, and Next.js. Collaborate on marketing funnels and optimize UX.",
+      "requirements": [
+        "Ruby on Rails experience",
+        "JavaScript, React, Next.js proficiency",
+        "SEO knowledge"
+      ],
+      "match_score": 50,
+      "url": "https://www.indeed.com/q-full-stack-developer-l-miami,-fl-jobs.html",
+      "date_posted": null,
+      "salary": "$60,000 - $100,000 a year",
+      "doc_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "search_timestamp": "2025-05-07T18:59:59.228034"
+    },
+    {
+      "title": "Full-Stack Developer",
+      "company": "DCI",
+      "location": "Washington, DC",
+      "description": "Develop distributed systems using Java, Groovy, React/Redux, and cloud infrastructure. Requires TS/SCI clearance and 5+ years of experience.",
+      "requirements": [
+        "Active TS/SCI clearance",
+        "5+ years full-stack development",
+        "Java, React, cloud infrastructure"
+      ],
+      "match_score": 78,
+      "url": "https://www.indeed.com/q-full-stack-developer-l-washington,-dc-jobs.html",
+      "date_posted": null,
+      "salary": "$180,000 - $260,000 per year",
+      "doc_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "search_timestamp": "2025-05-07T18:59:59.228109"
+    },
+    {
+      "title": "Full Stack Software Developer",
+      "company": "Corpay",
+      "location": "Sacramento, CA",
+      "description": "Develop using AngularJS, ReactJS, Java, Ruby on Rails. Requires 1-3+ years of experience and proficiency in AWS/Heroku.",
+      "requirements": [
+        "1-3+ years software development",
+        "Java, Ruby on Rails, ReactJS",
+        "Cloud services experience"
+      ],
+      "match_score": 50,
+      "url": "https://www.indeed.com/q-full-stack-developer-l-california-jobs.html",
+      "date_posted": null,
+      "salary": null,
+      "doc_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "search_timestamp": "2025-05-07T18:59:59.228210"
+    },
+    {
+      "title": "Full-Stack Developer",
+      "company": "DLL",
+      "location": "Philadelphia, PA",
+      "description": "Build web apps with React, Node.js, MongoDB, and integrate APIs. Requires experience with Sequelize, Oracle, and SQL Server.",
+      "requirements": [
+        "React, Node.js, MongoDB",
+        "ORM (Sequelize) proficiency",
+        "API integration experience"
+      ],
+      "match_score": 50,
+      "url": "https://www.indeed.com/q-full-stack-developer-l-philadelphia,-pa-jobs.html",
+      "date_posted": null,
+      "salary": null,
+      "doc_id": "c81d4c7a-1109-438d-9381-6938acd51f6b",
+      "search_timestamp": "2025-05-07T18:59:59.228335"
+    }
+  ]
 }
