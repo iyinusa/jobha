@@ -19,6 +19,23 @@ class CoverLetterRequest(BaseModel):
     tone: Optional[str] = "professional"
 
 
+class TailoredCVRequest(BaseModel):
+    """Request schema for tailored CV generation endpoint"""
+    doc_id: str
+    job_id: str
+
+
+class TailoredCVResponse(BaseModel):
+    """Response schema for tailored CV generation endpoint"""
+    success: bool
+    doc_id: str
+    job_id: Optional[str] = None
+    job_title: Optional[str] = None
+    company: Optional[str] = None
+    content: Optional[str] = None
+    message: Optional[str] = None
+
+
 class CVSection(BaseModel):
     """Base schema for a section in a CV"""
     content: List[str]

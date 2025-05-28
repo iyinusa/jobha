@@ -31,12 +31,13 @@ class JsonDatabase:
             # Create parent directories if they don't exist
             self.db_file.parent.mkdir(parents=True, exist_ok=True)
             
-            # Create initial DB structure with documents_jobs array included
+            # Create initial DB structure with all required arrays included
             with open(self.db_file, 'w') as f:
                 json.dump({
                     "documents": [], 
                     "documents_keywords": [],
-                    "documents_jobs": []
+                    "documents_jobs": [],
+                    "documents_cv": []  # Array for tailored CVs
                 }, f)
             
             logger.info(f"Created new database file at {self.db_file}")
@@ -59,6 +60,12 @@ class JsonDatabase:
                     db_content["documents_jobs"] = []
                     modified = True
                     logger.info(f"Added documents_jobs array to existing database")
+                
+                # Check for documents_cv array (for tailored CVs)
+                if "documents_cv" not in db_content:
+                    db_content["documents_cv"] = []
+                    modified = True
+                    logger.info(f"Added documents_cv array to existing database")
                 
                 # Save if modifications were made
                 if modified:
@@ -288,6 +295,9 @@ class JsonDatabase:
             # Add timestamp if not present
             if "search_timestamp" not in job:
                 job["search_timestamp"] = datetime.now().isoformat()
+            # Ensure job has a unique ID
+            if "id" not in job or not job["id"]:
+                job["id"] = str(uuid.uuid4())
             jobs_list.append(job)
         
         # Save changes
@@ -324,6 +334,80 @@ class JsonDatabase:
             return True
         
         return False  # No jobs found for this document
+    
+    # Tailored CV management methods
+    def save_tailored_cv(self, doc_id: str, job_id: str, tailored_cv: Dict[str, Any]) -> bool:
+        """
+        Save a tailored CV to the database for a specific document and job.
+        
+        Args:
+            doc_id: Document ID
+            job_id: Job ID
+            tailored_cv: Tailored CV data
+            
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        try:
+            # Read current database
+            data = self.read_db()
+            
+            # Ensure documents_cv array exists
+            if "documents_cv" not in data:
+                data["documents_cv"] = []
+                
+            # Check if there's an existing tailored CV for this document and job
+            existing_index = None
+            for i, cv in enumerate(data["documents_cv"]):
+                if cv.get("doc_id") == doc_id and cv.get("job_id") == job_id:
+                    existing_index = i
+                    break
+                    
+            # Update existing or add new
+            if existing_index is not None:
+                data["documents_cv"][existing_index] = tailored_cv
+            else:
+                data["documents_cv"].append(tailored_cv)
+                
+            # Write updated data
+            result = self.write_db(data)
+            
+            if result:
+                logger.info(f"Saved tailored CV for document {doc_id} and job {job_id}")
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error saving tailored CV: {str(e)}")
+            return False
+            
+    def get_tailored_cv(self, doc_id: str, job_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get a tailored CV for a specific document and job.
+        
+        Args:
+            doc_id: Document ID
+            job_id: Job ID
+            
+        Returns:
+            Tailored CV data or None if not found
+        """
+        try:
+            # Read current database
+            data = self.read_db()
+            
+            # Check if documents_cv array exists
+            if "documents_cv" not in data:
+                return None
+                
+            # Look for matching tailored CV
+            for cv in data["documents_cv"]:
+                if cv.get("doc_id") == doc_id and cv.get("job_id") == job_id:
+                    return cv
+                    
+            return None
+        except Exception as e:
+            logger.error(f"Error getting tailored CV: {str(e)}")
+            return None
 
 # Create a singleton instance of the database
 db = JsonDatabase()

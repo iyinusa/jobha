@@ -1,0 +1,81 @@
+/* Typing animation for the tailored CV */
+.typing-animation {
+    position: relative;
+    overflow: hidden;
+}
+
+.typing-animation::after {
+    content: '|';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    color: #0d6efd; /* Blue cursor color */
+    background-color: #fff; /* Background color to create reveal effect */
+    width: 100%;
+    animation: typing 5s steps(40, end) forwards, blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+@keyframes blink-caret {
+    from,
+    to {
+        color: transparent;
+    }
+    50% {
+        color: #0d6efd;
+    }
+}
+
+/* Styling for the tailored CV content */
+#typed-cv-content {
+    font-family: 'Arial', sans-serif;
+}
+
+#typed-cv-content h1, 
+#typed-cv-content h2, 
+#typed-cv-content h3 {
+    color: #0d6efd;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+#typed-cv-content h1 {
+    font-size: 1.75rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+#typed-cv-content h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.25rem;
+}
+
+#typed-cv-content h3 {
+    font-size: 1.25rem;
+}
+
+#typed-cv-content section {
+    margin-bottom: 1.5rem;
+}
+
+#typed-cv-content ul {
+    padding-left: 1.5rem;
+}
+
+#typed-cv-content ul li {
+    margin-bottom: 0.5rem;
+}
+
+#typed-cv-content p {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}

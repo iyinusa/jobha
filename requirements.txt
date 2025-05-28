@@ -15,6 +15,7 @@ bs4==0.0.1
 lxml==4.9.3
 requests==2.31.0
 aiofiles==23.2.1
+sse-starlette==1.8.2
 
 # Document parsing libraries
 pdfminer.six==20221105

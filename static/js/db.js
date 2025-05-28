@@ -5,6 +5,14 @@
 const DB = {
     documentContainer: null,
     jobContainer: null,
+    
+    // Make sure the DB object is available globally
+    init() {
+        // Ensure the DB object is accessible globally
+        console.log("Initializing DB module and exposing to window object");
+        window.DB = this;
+        return this;
+    },
 
     // Initialize the document container
     initializeDatabase() {
@@ -132,7 +140,12 @@ const DB = {
                                 const docId = firstItem.getAttribute('data-id');
                                 if (docId) {
                                     // Load with a small delay to allow UI to render
-                                    setTimeout(() => this.loadDocumentById(docId), 100);
+                                    setTimeout(() => {
+                                        this.loadDocumentById(docId).catch(err => {
+                                            console.error("Error loading document:", err);
+                                            this.showToast('Error', 'Failed to load document. Please try again.');
+                                        });
+                                    }, 100);
                                 }
                             }
                         }
@@ -227,63 +240,146 @@ const DB = {
             case 'txt':
                 return 'text';
             default:
-                return 'other';
+                return 'unknown';
         }
     },
 
-    // Get file icon based on type
-    getFileIcon(type) {
+    // Load a file document directly from the file path
+    loadFileDocument(fileDoc) {
+        try {
+            console.log('Loading file document:', fileDoc);
+            // Show loading state while processing
+            this.showLoadingState('Loading file...');
+            
+            // Mark viewer as having this document loaded
+            const viewerElement = document.querySelector('.viewer-wrapper');
+            if (viewerElement) {
+                viewerElement.setAttribute('data-current-doc-id', fileDoc.id);
+                viewerElement.setAttribute('data-file-path', fileDoc.path);
+            }
+            
+            // Get viewer content elements
+            const cvViewer = document.getElementById('cv-viewer');
+            const coverLetterViewer = document.getElementById('cover-letter-viewer');
+            
+            if (!cvViewer || !coverLetterViewer) {
+                console.error('Document viewer elements not found');
+                this.hideLoadingState();
+                this.showToast('Error', 'Document viewer not available. Please refresh the page.');
+                return { success: false, message: 'Viewer elements not found' };
+            }
+            
+            // Hide cover letter tab and viewer for file documents
+            const coverLetterTab = document.querySelector('[href="#cover-letter-tab"]');
+            if (coverLetterTab) {
+                coverLetterTab.classList.add('d-none');
+                // Show CV tab
+                const cvTab = document.querySelector('[href="#cv-tab"]');
+                if (cvTab) {
+                    cvTab.classList.add('active');
+                    cvTab.click(); // Ensure CV tab is active
+                }
+            }
+            
+            // Handle different file types
+            if (fileDoc.type === 'pdf') {
+                // For PDFs, use the PDF.js viewer
+                const pdfUrl = `/static/${fileDoc.path}`;
+                // Use the loadPdfDocument function from viewer.js if available
+                if (typeof window.loadPdfDocument === 'function') {
+                    window.loadPdfDocument(pdfUrl, cvViewer);
+                } else {
+                    // Fallback to simple PDF embed
+                    cvViewer.innerHTML = `
+                        <div class="pdf-container">
+                            <embed src="${pdfUrl}" type="application/pdf" width="100%" height="100%">
+                        </div>
+                    `;
+                }
+            } else {
+                // For non-PDF files, show a preview message and download button
+                cvViewer.innerHTML = `
+                    <div class="document-content text-center p-5">
+                        <div class="py-5">
+                            <i class="fas fa-file-${fileDoc.type === 'word' ? 'word' : 'alt'} fa-4x text-primary mb-3"></i>
+                            <h3 class="h4">${fileDoc.name}</h3>
+                            <p class="text-muted mb-4">This document type can be downloaded but preview is limited.</p>
+                            <button class="btn btn-primary file-download-btn">
+                                <i class="fas fa-download me-2"></i> Download Document
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add event listener to the download button
+                const downloadBtn = cvViewer.querySelector('.file-download-btn');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', () => {
+                        this.downloadFile(fileDoc);
+                    });
+                }
+            }
+            
+            // Set the active document in the sidebar list
+            const items = document.querySelectorAll('.document-list .list-group-item');
+            items.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-id') === fileDoc.id) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Hide loading state
+            this.hideLoadingState();
+            
+            return { success: true };
+        } catch (error) {
+            console.error('Error loading file document:', error);
+            this.hideLoadingState();
+            this.showToast('Error', `Could not load document: ${error.message || error}`);
+            return { success: false, message: error.message || 'Unknown error' };
+        }
+    },
+    
+    // Helper method to download a file
+    downloadFile(fileDoc) {
+        try {
+            this.showLoadingState('Preparing download...');
+            
+            // Create file URL
+            const filePath = fileDoc.path.startsWith('uploads/') ? fileDoc.path : `uploads/${fileDoc.path}`;
+            const fileUrl = `/static/${filePath}`;
+            
+            // Create and trigger download link
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = `${fileDoc.name || 'document'}${this.getFileExtension(fileDoc.type)}`;
+            document.body.appendChild(a);
+            
+            setTimeout(() => {
+                a.click();
+                document.body.removeChild(a);
+                this.hideLoadingState();
+                this.showToast('Success', 'Download started');
+            }, 300);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            this.hideLoadingState();
+            this.showToast('Error', `Failed to download file: ${error.message || error}`);
+        }
+    },
+    
+    // Get file extension based on document type
+    getFileExtension(type) {
         switch (type) {
             case 'pdf':
-                return 'fas fa-file-pdf text-danger';
+                return '.pdf';
             case 'word':
-                return 'fas fa-file-word text-primary';
+                return '.docx';
             case 'text':
-                return 'fas fa-file-alt text-secondary';
-            case 'cv':
-                return 'fas fa-file-alt text-primary';
-            case 'cover-letter':
-                return 'fas fa-envelope text-success';
+                return '.txt';
             default:
-                return 'fas fa-file text-muted';
-        }
-    },
-
-    // Create an empty state element
-    showEmptyState() {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'text-center p-4 empty-state';
-        emptyState.innerHTML = `
-            <div class="empty-state-icon mb-3">
-                <i class="fas fa-file-alt fa-3x text-muted"></i>
-            </div>
-            <h5>No Documents Yet</h5>
-            <p class="text-muted mb-4">Upload your CV or create a new document to get started.</p>
-            <button class="btn btn-primary empty-state-upload-btn" id="empty-state-upload-btn">
-                <i class="fas fa-upload me-2"></i> Upload CV
-            </button>
-        `;
-
-        this.documentContainer.appendChild(emptyState);
-
-        // Add event listener to the upload button
-        const uploadBtn = document.getElementById('empty-state-upload-btn');
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', () => {
-                // Create file input dynamically
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.pdf,.doc,.docx,.txt';
-                fileInput.style.display = 'none';
-                fileInput.addEventListener('change', this.handleFileUpload.bind(this));
-                document.body.appendChild(fileInput);
-                fileInput.click();
-
-                // Remove after selection
-                fileInput.addEventListener('blur', function () {
-                    document.body.removeChild(fileInput);
-                });
-            });
+                return '';
         }
     },
 
@@ -511,8 +607,17 @@ const DB = {
                     isFileDocument: true
                 };
 
-                // Use the existing file document loader
-                return this.loadFileDocument(fileDoc);
+                console.log("Loading file document via path:", fileDoc);
+                
+                // Use the defined loadFileDocument method directly from DB object
+                try {
+                    return DB.loadFileDocument(fileDoc);
+                } catch (error) {
+                    console.error("Error calling loadFileDocument:", error);
+                    this.hideLoadingState();
+                    this.showToast('Error', 'Could not load document. Please try again.');
+                    return { success: false, message: 'Error loading file document: ' + error.message };
+                }
             }
 
             // Otherwise continue with regular document display
@@ -854,6 +959,8 @@ const DB = {
                 </div>
             `;
 
+            console.log(`Fetching jobs for document ID: ${docId}`);
+            
             // Fetch jobs for the document (updated endpoint)
             const response = await fetch(`/api/cv/documents/${docId}/jobs?limit=50`);
 
@@ -862,15 +969,26 @@ const DB = {
             }
 
             const result = await response.json();
+            console.log('Received job results:', result);
 
-            if (result.success && result.jobs && result.jobs.length > 0) {
+            if (result.success && result.jobs && Array.isArray(result.jobs) && result.jobs.length > 0) {
                 // Clear the container
                 this.jobContainer.innerHTML = '';
+                console.log(`Found ${result.jobs.length} job(s) to display`);
 
                 // Create and append job items
-                result.jobs.forEach(job => {
-                    const jobItem = this.createJobListItem(job);
-                    this.jobContainer.appendChild(jobItem);
+                result.jobs.forEach((job, index) => {
+                    try {
+                        if (!job) {
+                            console.warn(`Job at index ${index} is undefined or null`);
+                            return;
+                        }
+                        
+                        const jobItem = this.createJobListItem(job);
+                        this.jobContainer.appendChild(jobItem);
+                    } catch (itemError) {
+                        console.error(`Error creating job item at index ${index}:`, itemError);
+                    }
                 });
 
                 // Hide the no jobs message
@@ -878,7 +996,19 @@ const DB = {
                 if (noJobsMessage) {
                     noJobsMessage.style.display = 'none';
                 }
+                
+                // Display count at the top
+                const jobCountBanner = document.createElement('div');
+                jobCountBanner.className = 'alert alert-success mb-2';
+                jobCountBanner.innerHTML = `<strong>${result.jobs.length}</strong> matching jobs found`;
+                this.jobContainer.prepend(jobCountBanner);
+                
+                // Set a timeout to hide the banner
+                setTimeout(() => {
+                    jobCountBanner.style.display = 'none';
+                }, 5000);
             } else {
+                console.log('No jobs found or invalid response format:', result);
                 // Show no jobs message
                 this.jobContainer.innerHTML = `
                     <div class="text-center p-4 text-muted" id="no-jobs-message">
@@ -914,18 +1044,36 @@ const DB = {
     createJobListItem(job) {
         const listItem = document.createElement('a');
         listItem.href = '#';
-        listItem.className = 'list-group-item list-group-item-action p-3 job-list-item';
-        listItem.setAttribute('data-id', job.id || `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
-        listItem.setAttribute('data-job', JSON.stringify(job));
+        listItem.className = 'list-group-item list-group-item-action job-list-item';
+        
+        // Generate a unique ID if one doesn't exist
+        const jobId = job.id || job._id || `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        listItem.setAttribute('data-id', jobId);
+        
+        // Store job data safely
+        try {
+            listItem.setAttribute('data-job', JSON.stringify(job));
+        } catch (e) {
+            console.error('Failed to stringify job data:', e);
+            // Create a sanitized version with only essential properties
+            const safeJob = {
+                title: job.title || 'Untitled Job',
+                company: job.company || 'Unknown Company',
+                location: job.location || 'Location not specified',
+                match_score: job.match_score || 0
+            };
+            listItem.setAttribute('data-job', JSON.stringify(safeJob));
+        }
 
         // Determine match badge class based on score
         let matchBadgeClass = 'match-badge-low';
+        const matchScore = typeof job.match_score === 'number' ? job.match_score : 0;
 
-        if (job.match_score >= 90) {
+        if (matchScore >= 90) {
             matchBadgeClass = 'match-badge-high';
-        } else if (job.match_score >= 75) {
+        } else if (matchScore >= 75) {
             matchBadgeClass = 'match-badge-medium';
-        } else if (job.match_score >= 60) {
+        } else if (matchScore >= 60) {
             matchBadgeClass = 'match-badge-low';
         } else {
             matchBadgeClass = 'match-badge-poor';
@@ -940,12 +1088,12 @@ const DB = {
             <p class="mb-1 small job-item-company">${job.company || 'Unknown Company'}</p>
             <div class="d-flex justify-content-between align-items-center small job-item-meta">
                 <span class="job-item-location ${locationClass}"><i class="fas fa-map-marker-alt me-1"></i> ${location}</span>
-                <span class="badge ${matchBadgeClass}">${job.match_score || 0}% Match</span>
+                <span class="badge ${matchBadgeClass}">${matchScore}% Match</span>
             </div>
         `;
 
         // Add click event to show job details
-        listItem.addEventListener('click', (event) => {
+        listItem.addEventListener('click', async (event) => {
             event.preventDefault();
 
             // Remove active class from all items
@@ -957,6 +1105,13 @@ const DB = {
 
             // Show job details
             this.showJobDetails(job);
+            
+            // Create or retrieve the tailored CV for this job
+            const activeDocItem = document.querySelector('.document-list .list-group-item.active');
+            if (activeDocItem) {
+                const docId = activeDocItem.getAttribute('data-id');
+                await this.createTailoredCv(docId, jobId);
+            }
         });
 
         return listItem;
@@ -1077,513 +1232,130 @@ const DB = {
         }
     },
 
-    // Helper method to trigger CV analysis in the background without blocking UI
-    async _triggerCvAnalysisInBackground(docId) {
+    // Create tailored CV for a specific job
+    async createTailoredCv(docId, jobId) {
         try {
-            console.log(`Triggering background CV analysis for document ${docId}`);
-
-            // Show discreet notification that analysis is happening
-            this.showToast('CV Analysis', 'Analyzing CV in background...');
-
-            // Call the Perplexity API to analyze the CV
-            const result = await window.CVParser.analyzeDocument(docId);
-
-            if (result.success) {
-                console.log('CV Analysis complete:', result.analysis);
-                this.showToast('Analysis Complete', 'Your CV has been analyzed successfully.');
+            // Get the AI CV viewer tab and content
+            const aiCvTab = document.querySelector('[href="#ai-cv-tab"]');
+            const aiCvViewer = document.getElementById('ai-cv-viewer');
+            
+            if (!aiCvTab || !aiCvViewer) {
+                console.error('AI CV viewer elements not found');
+                return;
             }
-        } catch (error) {
-            console.error('Background CV analysis error:', error);
-            // Don't show errors to user since this is a background process
-        }
-    },
-
-    // Load a file document for viewing
-    loadFileDocument(fileDoc) {
-        try {
-            console.log("Loading file document:", fileDoc); // Add debugging
-            // Show loading state
-            this.showLoadingState('Loading document...');
-
-            // Mark viewer as having this document loaded
-            const viewerElement = document.querySelector('.viewer-wrapper');
-            if (viewerElement) {
-                viewerElement.removeAttribute('data-current-doc-id'); // Clear any previous document ID
-                viewerElement.setAttribute('data-file-path', fileDoc.path);
-            }
-
-            // Update download button to show the document name
-            const downloadBtn = document.getElementById('download-document-btn');
-            if (downloadBtn) {
-                downloadBtn.innerHTML = `<i class="fas fa-download me-1"></i> Download "${fileDoc.name}"`;
-                downloadBtn.classList.remove('btn-outline-primary');
-                downloadBtn.classList.add('btn-primary');
-            }
-
-            // Default to CV tab
-            const tabLinks = document.querySelectorAll('.nav-link');
-            tabLinks.forEach(link => {
-                if (link.getAttribute('href') === '#cv-tab') {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-
-            const tabPanes = document.querySelectorAll('.tab-pane');
-            tabPanes.forEach(pane => {
-                if (pane.id === 'cv-tab') {
-                    pane.classList.add('active', 'show');
-                } else {
-                    pane.classList.remove('active', 'show');
-                }
-            });
-
-            // Get the viewer container
-            const cvViewer = document.getElementById('cv-viewer');
-            if (!cvViewer) {
-                console.error('CV viewer element not found');
-                this.hideLoadingState();
-                this.showToast('Error', 'Document viewer not available. Please refresh the page.');
-                return { success: false };
-            }
-
-            // Remove empty state if exists
-            const emptyState = cvViewer.querySelector('.empty-viewer-state');
-            if (emptyState) {
-                emptyState.style.opacity = '0';
-                setTimeout(() => {
-                    if (emptyState.parentNode === cvViewer) {
-                        cvViewer.removeChild(emptyState);
-                    }
-                }, 300);
-            }
-
-            // Create container with fade effect
-            cvViewer.innerHTML = '';
-
-            // File URL - fix the path construction
-            // Make sure we have a proper path that starts with 'uploads/'
-            let filePath = fileDoc.path;
-            if (!filePath.startsWith('uploads/') && !filePath.startsWith('/uploads/')) {
-                filePath = 'uploads/' + filePath;
-            }
-            const fileUrl = `/static/${filePath}`;
-            console.log("File URL constructed:", fileUrl);
-
-            // Get full absolute URL (needed for external viewers)
-            const origin = window.location.origin;
-            const absoluteFileUrl = origin + fileUrl;
-            console.log("Absolute File URL:", absoluteFileUrl);
-
-            // Modified date information
-            const modifiedDate = fileDoc.modified ? this.formatDate(new Date(fileDoc.modified)) : this.formatDate(new Date());
-
-            // Standard metadata header for all file types
-            const metadataHeader = `
-                <div class="document-metadata mb-4">
-                    <h1>${fileDoc.name}</h1>
-                    <div class="document-info text-muted small d-flex justify-content-between border-bottom pb-3 mb-4">
-                        <span><i class="far fa-calendar me-1"></i> Last modified: ${modifiedDate}</span>
-                        <span><i class="fas ${this.getFileTypeIcon(fileDoc.type)} me-1"></i> File type: ${this.getFileTypeLabel(fileDoc.type)}</span>
+            
+            // Show loading state in the AI CV viewer
+            aiCvViewer.innerHTML = `
+                <div class="document-content text-center p-5">
+                    <div class="py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h3 class="h4">Creating your tailored CV</h3>
+                        <p class="text-muted mb-4">Optimizing your CV for this specific job opportunity...</p>
                     </div>
                 </div>
             `;
-
-            // Handle different file types
-            switch (fileDoc.type) {
-                case 'pdf':
-                    // Create container for PDF with metadata
-                    const pdfContainer = document.createElement('div');
-                    pdfContainer.className = 'document-content-native p-0';
-                    pdfContainer.style.opacity = '0';
-                    pdfContainer.style.transition = 'opacity 0.3s ease';
-
-                    // Add metadata section at the top
-                    // const pdfMetadataSection = document.createElement('div');
-                    // pdfMetadataSection.className = 'pdf-metadata p-4';
-                    // pdfMetadataSection.innerHTML = metadataHeader;
-                    // pdfContainer.appendChild(pdfMetadataSection);
-
-                    // Create container for native PDF embedding
-                    const nativePdfContainer = document.createElement('div');
-                    nativePdfContainer.className = 'native-pdf-container';
-                    nativePdfContainer.style.width = '100%';
-                    nativePdfContainer.style.height = 'calc(100vh - 250px)';
-                    nativePdfContainer.style.overflow = 'hidden';
-                    nativePdfContainer.style.borderRadius = '8px';
-                    nativePdfContainer.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.05)';
-
-                    // Use iframe for direct PDF rendering - this ensures the document is displayed exactly as it is
-                    const pdfIframe = document.createElement('iframe');
-                    pdfIframe.className = 'native-pdf-iframe';
-                    pdfIframe.src = fileUrl;
-                    pdfIframe.style.width = '100%';
-                    pdfIframe.style.height = '100%';
-                    pdfIframe.style.border = 'none';
-                    pdfIframe.setAttribute('title', fileDoc.name);
-                    pdfIframe.setAttribute('loading', 'lazy');
-
-                    // Fallback for browsers that don't support PDF embedding
-                    const fallbackDiv = document.createElement('div');
-                    fallbackDiv.className = 'pdf-fallback-container';
-                    fallbackDiv.innerHTML = `
-                        <div class="py-4 text-center">
-                            <p>Your browser doesn't support embedded PDF viewing.</p>
-                            <a href="${fileUrl}" class="btn btn-primary" target="_blank">
-                                <i class="fas fa-external-link-alt me-2"></i> Open PDF in New Tab
-                            </a>
-                        </div>
-                    `;
-
-                    // Add PDF content
-                    nativePdfContainer.appendChild(pdfIframe);
-                    nativePdfContainer.appendChild(fallbackDiv);
-                    pdfContainer.appendChild(nativePdfContainer);
-
-                    // Add viewer options buttons below the PDF
-                    const viewerOptions = document.createElement('div');
-                    viewerOptions.className = 'viewer-options d-flex justify-content-between align-items-center bg-light p-3 mt-3 rounded';
-                    viewerOptions.innerHTML = `
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary toggle-view-mode" data-mode="native">
-                                <i class="fas fa-file-pdf me-2"></i> Native View
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary ms-2 toggle-view-mode" data-mode="enhanced">
-                                <i class="fas fa-edit me-2"></i> Enhanced View
-                            </button>
-                        </div>
-                        <a href="${fileUrl}" class="btn btn-sm btn-outline-primary" target="_blank">
-                            <i class="fas fa-external-link-alt me-2"></i> Open in New Tab
-                        </a>
-                    `;
-                    pdfContainer.appendChild(viewerOptions);
-
-                    // Append to the document
-                    cvViewer.appendChild(pdfContainer);
-
-                    // Fade in the container
-                    setTimeout(() => {
-                        pdfContainer.style.opacity = '1';
-                        this.hideLoadingState();
-
-                        // Add event listeners for view mode toggle
-                        const toggleButtons = pdfContainer.querySelectorAll('.toggle-view-mode');
-                        toggleButtons.forEach(btn => {
-                            btn.addEventListener('click', (e) => {
-                                const mode = e.currentTarget.getAttribute('data-mode');
-                                if (mode === 'native') {
-                                    // Switch to native view (already active)
-                                    nativePdfContainer.style.display = 'block';
-                                    const enhancedViewer = pdfContainer.querySelector('.pdf-viewer-element');
-                                    if (enhancedViewer) enhancedViewer.style.display = 'none';
-
-                                    // Update button states
-                                    toggleButtons.forEach(b => {
-                                        if (b.getAttribute('data-mode') === 'native') {
-                                            b.classList.remove('btn-outline-primary');
-                                            b.classList.add('btn-primary');
-                                        } else {
-                                            b.classList.remove('btn-primary');
-                                            b.classList.add('btn-outline-secondary');
-                                        }
-                                    });
-                                } else {
-                                    // Switch to enhanced view with PDF.js
-                                    let enhancedViewer = pdfContainer.querySelector('.pdf-viewer-element');
-                                    if (!enhancedViewer) {
-                                        enhancedViewer = document.createElement('div');
-                                        enhancedViewer.className = 'pdf-viewer-element';
-                                        enhancedViewer.style.height = 'calc(100vh - 250px)';
-                                        enhancedViewer.style.display = 'none';
-                                        nativePdfContainer.parentNode.insertBefore(enhancedViewer, nativePdfContainer.nextSibling);
-                                        window.loadPdfDocument(fileUrl, enhancedViewer);
-                                    }
-
-                                    // Show enhanced view, hide native
-                                    nativePdfContainer.style.display = 'none';
-                                    enhancedViewer.style.display = 'block';
-
-                                    // Update button states
-                                    toggleButtons.forEach(b => {
-                                        if (b.getAttribute('data-mode') === 'enhanced') {
-                                            b.classList.remove('btn-outline-secondary');
-                                            b.classList.add('btn-primary');
-                                        } else {
-                                            b.classList.remove('btn-primary');
-                                            b.classList.add('btn-outline-primary');
-                                        }
-                                    });
-                                }
-                            });
-                        });
-                    }, 300);
-                    break;
-
-                case 'word':
-                    // For Word documents, we offer multiple viewing options with fallbacks
-                    const wordContainer = document.createElement('div');
-                    wordContainer.className = 'document-content-native';
-                    wordContainer.style.opacity = '0';
-                    wordContainer.style.transition = 'opacity 0.3s ease';
-
-                    // const wordViewerHeader = document.createElement('div');
-                    // wordViewerHeader.className = 'pdf-metadata p-4';
-                    // wordViewerHeader.innerHTML = metadataHeader;
-                    // wordContainer.appendChild(wordViewerHeader);
-
-                    // Create document viewer container
-                    const docViewerContainer = document.createElement('div');
-                    docViewerContainer.className = 'word-viewer-container';
-                    docViewerContainer.style.width = '100%';
-                    docViewerContainer.style.height = 'calc(100vh - 320px)';
-                    docViewerContainer.style.border = '1px solid #e9ecef';
-                    docViewerContainer.style.borderRadius = '8px';
-                    docViewerContainer.style.overflow = 'hidden';
-
-                    // Prepare URLs for different viewer options
-                    const encodedUrl = encodeURIComponent(absoluteFileUrl);
-
-                    // Microsoft Office Online viewer (better for .docx files)
-                    const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
-
-                    // Google Docs viewer (alternative option)
-                    const googleDocsUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
-
-                    // Default to Microsoft Office viewer since it handles Word docs better
-                    const wordFrame = document.createElement('iframe');
-                    wordFrame.src = officeViewerUrl;
-                    wordFrame.style.width = '100%';
-                    wordFrame.style.height = '100%';
-                    wordFrame.style.border = 'none';
-                    wordFrame.setAttribute('title', fileDoc.name);
-                    wordFrame.setAttribute('loading', 'lazy');
-                    wordFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
-
-                    // Log what we're doing
-                    console.log(`Loading Word document with Office Online viewer: ${officeViewerUrl}`);
-
-                    docViewerContainer.appendChild(wordFrame);
-
-                    // Better viewer options UI with multiple viewing options
-                    const viewerOptionsTabs = document.createElement('div');
-                    viewerOptionsTabs.className = 'viewer-options bg-light p-3 mt-3 rounded';
-                    viewerOptionsTabs.innerHTML = `
-                        <div class="d-flex justify-content-between">
-                            <div class="btn-group viewer-option-tabs" role="group">
-                                <button class="btn btn-sm btn-primary viewer-option active" data-viewer="office">
-                                    <i class="fas fa-file-word me-1"></i> Office Viewer
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary viewer-option" data-viewer="google">
-                                    <i class="fab fa-google me-1"></i> Google Docs
-                                </button>
-                            </div>
-                            <div>
-                                <a href="${fileUrl}" download class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-download me-1"></i> Download
-                                </a>
-                            </div>
-                        </div>
-                        <div class="mt-3" id="viewer-message">
-                            <div class="alert alert-info small">
-                                <i class="fas fa-info-circle me-2"></i>
-                                If the document doesn't load, try the Google Docs viewer option or download the file.
-                            </div>
-                        </div>
-                    `;
-
-                    wordContainer.appendChild(docViewerContainer);
-                    wordContainer.appendChild(viewerOptionsTabs);
-                    cvViewer.appendChild(wordContainer);
-
-                    // Fade in the container
-                    setTimeout(() => {
-                        wordContainer.style.opacity = '1';
-                        this.hideLoadingState();
-
-                        // Set up event listeners for viewer option buttons
-                        const viewerButtons = viewerOptionsTabs.querySelectorAll('.viewer-option');
-                        viewerButtons.forEach(btn => {
-                            btn.addEventListener('click', () => {
-                                // Update active button state
-                                viewerButtons.forEach(b => {
-                                    b.classList.remove('btn-primary', 'active');
-                                    b.classList.add('btn-outline-primary');
-                                });
-                                btn.classList.remove('btn-outline-primary');
-                                btn.classList.add('btn-primary', 'active');
-
-                                // Get viewer type and update iframe
-                                const viewerType = btn.getAttribute('data-viewer');
-                                const viewerMessage = document.getElementById('viewer-message');
-
-                                // Show loading message
-                                viewerMessage.innerHTML = `
-                                    <div class="text-center py-2">
-                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <span class="ms-2">Switching document viewer...</span>
-                                    </div>
-                                `;
-
-                                // Change iframe source based on viewer type
-                                if (viewerType === 'google') {
-                                    console.log(`Switching to Google Docs viewer: ${googleDocsUrl}`);
-                                    wordFrame.src = googleDocsUrl;
-                                    viewerMessage.innerHTML = `
-                                        <div class="alert alert-info small">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            Using Google Docs viewer. If it shows "Loading..." for too long, the document might be too large or complex.
-                                        </div>
-                                    `;
-                                } else {
-                                    console.log(`Switching to Office Online viewer: ${officeViewerUrl}`);
-                                    wordFrame.src = officeViewerUrl;
-                                    viewerMessage.innerHTML = `
-                                        <div class="alert alert-info small">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            Using Microsoft Office Online viewer. This may take a moment to load.
-                                        </div>
-                                    `;
-                                }
-                            });
-                        });
-
-                        // Handle iframe errors
-                        wordFrame.addEventListener('load', () => {
-                            console.log('Word document viewer loaded');
-                            const viewerMessage = document.getElementById('viewer-message');
-                            viewerMessage.innerHTML = '';
-                        });
-
-                        wordFrame.addEventListener('error', () => {
-                            console.error('Failed to load Word document in viewer');
-                            const viewerMessage = document.getElementById('viewer-message');
-                            viewerMessage.innerHTML = `
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Failed to load document in viewer. Try another viewer option or download the file.
-                                </div>
-                            `;
-                        });
-                    }, 300);
-                    break;
-
-                case 'text':
-                    // Create container for text document with syntax highlighting
-                    const textContainer = document.createElement('div');
-                    textContainer.className = 'document-content-native';
-                    textContainer.style.opacity = '0';
-                    textContainer.style.transition = 'opacity 0.3s ease';
-
-                    // Add metadata initially
-                    const textHeader = document.createElement('div');
-                    textHeader.className = 'pdf-metadata p-4';
-                    textHeader.innerHTML = metadataHeader;
-                    textContainer.appendChild(textHeader);
-
-                    const textContentWrapper = document.createElement('div');
-                    textContentWrapper.className = 'text-content-wrapper p-4';
-                    textContentWrapper.innerHTML = '<div class="text-content-placeholder"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-                    textContainer.appendChild(textContentWrapper);
-
-                    cvViewer.appendChild(textContainer);
-
-                    // Fetch and display text content with original formatting
-                    fetch(fileUrl)
-                        .then(response => response.text())
-                        .then(text => {
-                            const contentPlaceholder = textContainer.querySelector('.text-content-placeholder');
-                            if (contentPlaceholder) {
-                                // Create a pre element for proper text formatting
-                                const textContent = document.createElement('pre');
-                                textContent.className = 'text-document-content';
-                                textContent.style.fontFamily = 'Consolas, Monaco, "Andale Mono", monospace';
-                                textContent.style.fontSize = '14px';
-                                textContent.style.lineHeight = '1.6';
-                                textContent.style.padding = '20px';
-                                textContent.style.border = '1px solid #e9ecef';
-                                textContent.style.borderRadius = '8px';
-                                textContent.style.backgroundColor = '#fafafa';
-                                textContent.style.whiteSpace = 'pre-wrap';
-                                textContent.style.wordWrap = 'break-word';
-                                textContent.style.overflow = 'auto';
-                                textContent.style.maxHeight = 'calc(100vh - 300px)';
-                                textContent.textContent = text;
-
-                                contentPlaceholder.replaceWith(textContent);
-
-                                // Fade in when content is loaded
-                                textContainer.style.opacity = '1';
-                                this.hideLoadingState();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error loading text document:', error);
-                            const contentPlaceholder = textContainer.querySelector('.text-content-placeholder');
-                            if (contentPlaceholder) {
-                                contentPlaceholder.innerHTML = `
-                                    <div class="alert alert-danger">
-                                        <i class="fas fa-exclamation-circle me-2"></i>
-                                        Failed to load text document: ${error.message || 'Unknown error'}
-                                    </div>
-                                    <div class="mt-3">
-                                        <a href="${fileUrl}" download class="btn btn-primary">
-                                            <i class="fas fa-download me-2"></i> Download Text File
-                                        </a>
-                                    </div>
-                                `;
-
-                                // Fade in even on error
-                                textContainer.style.opacity = '1';
-                                this.hideLoadingState();
-                            }
-                        });
-                    break;
-
-                default:
-                    // Generic file view with download option and attempt to embed if possible
-                    const genericContainer = document.createElement('div');
-                    genericContainer.className = 'document-content-native';
-                    genericContainer.style.opacity = '0';
-                    genericContainer.style.transition = 'opacity 0.3s ease';
-
-                    genericContainer.innerHTML = `
-                        ${metadataHeader}
-                        <div class="text-center mt-5">
-                            <i class="fas ${this.getFileIcon(fileDoc.type)} fa-5x mb-4"></i>
-                            <p class="text-muted mb-4">This file type cannot be previewed natively in the browser.</p>
-                            <div class="document-actions">
-                                <a href="${fileUrl}" download class="btn btn-primary me-2">
-                                    <i class="fas fa-download me-2"></i> Download File
-                                </a>
-                                <a href="${fileUrl}" target="_blank" class="btn btn-outline-primary">
-                                    <i class="fas fa-external-link-alt me-2"></i> Open in New Tab
-                                </a>
-                            </div>
-                        </div>
-                    `;
-
-                    cvViewer.appendChild(genericContainer);
-
-                    // Fade in the container
-                    setTimeout(() => {
-                        genericContainer.style.opacity = '1';
-                        this.hideLoadingState();
-                    }, 300);
+            
+            // Highlight the AI CV tab to draw attention to it
+            aiCvTab.classList.add('animate__animated', 'animate__flash');
+            setTimeout(() => {
+                aiCvTab.classList.remove('animate__animated', 'animate__flash');
+            }, 1000);
+            
+            // First, try to get an existing tailored CV
+            let response = await fetch(`/api/cv/documents/${docId}/jobs/${jobId}/tailored-cv`);
+            let result = await response.json();
+            
+            // If no existing CV is found or there's an error, create a new one
+            if (!result.success || !result.content) {
+                console.log('No existing tailored CV found, creating a new one...');
+                
+                // Call the API to create a new tailored CV
+                response = await fetch(`/api/cv/documents/${docId}/jobs/${jobId}/create-cv`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to create tailored CV: ${response.status}`);
+                }
+                
+                result = await response.json();
             }
-
-            console.log(`File document loaded successfully: ${fileDoc.name}`);
-
-            return { success: true };
-
+            
+            if (result.success && result.content) {
+                // Create a container for the CV content
+                aiCvViewer.innerHTML = `
+                    <div class="document-content p-4">
+                        <div id="typed-cv-content"></div>
+                    </div>
+                `;
+                
+                // Display the CV content with typing animation
+                this.displayWithTypingEffect(result.content, 'typed-cv-content');
+                
+                // Switch to the AI CV tab
+                aiCvTab.click();
+                
+                return true;
+            } else {
+                aiCvViewer.innerHTML = `
+                    <div class="document-content text-center p-5">
+                        <div class="py-5">
+                            <i class="fas fa-exclamation-circle fa-4x text-warning mb-3"></i>
+                            <h3 class="h4">CV Generation Failed</h3>
+                            <p class="text-muted mb-4">${result.message || 'Could not create tailored CV at this time. Please try again later.'}</p>
+                        </div>
+                    </div>
+                `;
+                return false;
+            }
         } catch (error) {
-            console.error('Error loading file document:', error);
-            this.hideLoadingState();
-            this.showToast('Error', 'Could not load document. Please try again.');
-            return { success: false, message: error.message };
+            console.error('Error creating tailored CV:', error);
+            this.showToast('Error', `Failed to create tailored CV: ${error.message}`);
+            
+            // Show error in the AI CV viewer
+            const aiCvViewer = document.getElementById('ai-cv-viewer');
+            if (aiCvViewer) {
+                aiCvViewer.innerHTML = `
+                    <div class="document-content text-center p-5">
+                        <div class="py-5">
+                            <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+                            <h3 class="h4">Error</h3>
+                            <p class="text-muted mb-4">Failed to create tailored CV. Please try again later.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return false;
         }
+    },
+    
+    // Display text with typing animation effect
+    displayWithTypingEffect(html, elementId, speed = 10) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Extract the text content
+        const content = tempDiv.textContent;
+        
+        // Set initial content
+        element.innerHTML = html;
+        
+        // Add the typing animation CSS class
+        element.classList.add('typing-animation');
+        
+        // Remove the typing animation class after animation completes
+        setTimeout(() => {
+            element.classList.remove('typing-animation');
+        }, content.length * speed + 1000); // Adding extra time for animation to complete
     },
 
     // Get file type icon for metadata display
@@ -1839,5 +1611,5 @@ const DB = {
     }
 };
 
-// Make DB available globally
-window.DB = DB;
+// Initialize and make DB available globally
+window.DB = DB.init();

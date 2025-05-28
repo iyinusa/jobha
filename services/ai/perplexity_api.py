@@ -2,7 +2,9 @@ import os
 import requests
 import logging
 import json
-from typing import Dict, Any, Optional, List
+import asyncio
+import time
+from typing import Dict, Any, Optional, List, Callable, Awaitable
 from datetime import datetime
 
 from services.database.json_db import db  # Import the singleton database instance
@@ -86,13 +88,14 @@ class PerplexityAPI:
             logger.error(f"Error analyzing CV with Perplexity API: {str(e)}")
             return None
     
-    def search_jobs(self, keywords: List[str], doc_id: str) -> Optional[List[Dict[str, Any]]]:
+    def search_jobs(self, keywords: List[str], doc_id: str, callback: Optional[Callable] = None) -> Optional[List[Dict[str, Any]]]:
         """
         Search for jobs using Perplexity Sonar Deep Research API based on CV keywords.
         
         Args:
             keywords: List of keywords extracted from the CV
             doc_id: Document ID to associate the search results with
+            callback: Optional callback function for streaming results
             
         Returns:
             List of job postings found or None if search failed
@@ -106,13 +109,14 @@ class PerplexityAPI:
             return None
             
         try:
-            # Load websites from the JSON file
-            websites_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                                        "data", "websites.json")
+            # Load websites from the JSON file - adjust path for data folder location
+            data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
+            websites_path = os.path.join(data_dir, "websites.json")
             
             try:
                 with open(websites_path, 'r') as f:
                     websites = json.load(f)
+                    logger.info(f"Loaded {len(websites)} websites from {websites_path}")
             except (FileNotFoundError, json.JSONDecodeError) as e:
                 logger.warning(f"Error loading websites.json: {str(e)}")
                 websites = ["indeed.com", "glassdoor.com"]  # Default fallback
@@ -158,6 +162,21 @@ class PerplexityAPI:
             # Process the extracted text into structured data
             result = self._process_job_search_response(extracted_text, doc_id)
             
+            # If callback provided, send jobs in batches for streaming
+            if callback and result:
+                batch_size = 5  # Send jobs in batches of 5
+                for i in range(0, len(result), batch_size):
+                    batch = result[i:i + batch_size]
+                    is_final_batch = (i + batch_size) >= len(result)
+                    callback(batch, is_complete=is_final_batch)
+                    
+                    # Small delay between batches for better streaming effect
+                    if not is_final_batch:
+                        time.sleep(0.5)
+            elif callback:
+                # No results found
+                callback([], is_complete=True)
+            
             # Save results to database using the JsonDatabase singleton
             db.save_document_jobs(doc_id, result)
             
@@ -166,8 +185,106 @@ class PerplexityAPI:
             return result
         except Exception as e:
             logger.error(f"Error searching jobs with Perplexity API: {str(e)}")
+            if callback:
+                callback([], is_complete=True, error=str(e))
             return None
+
+    async def search_jobs_async(self, keywords: List[str], doc_id: str, callback: Callable) -> None:
+        """
+        Async version of job search that supports streaming results via callback.
+        
+        Args:
+            keywords: List of keywords extracted from the CV
+            doc_id: Document ID to associate the search results with
+            callback: Callback function to receive streaming results
+        """
+        try:
+            # Run the synchronous search_jobs in a thread pool
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                self.search_jobs,
+                keywords,
+                doc_id,
+                callback
+            )
+        except Exception as e:
+            logger.error(f"Error in async job search: {str(e)}")
+            callback([], is_complete=True, error=str(e))
     
+    def create_tailored_cv(self, cv_content: str, cv_keywords: Dict[str, Any], job_details: Dict[str, Any], doc_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Create a tailored CV for a specific job using the Perplexity API.
+        
+        Args:
+            cv_content: The original CV content
+            cv_keywords: The extracted keywords and information from the CV
+            job_details: The job details to tailor the CV for
+            doc_id: Document ID to associate the tailored CV with
+            
+        Returns:
+            Dictionary containing the tailored CV content or None if generation failed
+        """
+        if not self.api_key:
+            logger.error("Cannot create tailored CV: Perplexity API key not found")
+            return None
+            
+        if not cv_content or not job_details:
+            logger.error("Cannot create tailored CV: Missing CV content or job details")
+            return None
+            
+        try:
+            # Prepare the prompt for the model
+            prompt = self._create_tailored_cv_prompt(cv_content, cv_keywords, job_details)
+            
+            # Call the Perplexity API
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": self.MODEL,
+                "messages": [
+                    {"role": "system", "content": "You are an expert CV and resume writer. Create a tailored CV that highlights relevant skills and experience for a specific job."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,  # Higher temperature for creative content
+            }
+            
+            logger.info("Making request to Perplexity API to create tailored CV")
+            response = requests.post(self.API_URL, headers=headers, json=payload)
+            
+            if response.status_code != 200:
+                logger.error(f"API Error: {response.status_code} - {response.text}")
+                return None
+                
+            # Parse the response
+            response_data = response.json()
+            tailored_cv = response_data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
+            if not tailored_cv:
+                logger.error("Empty response from Perplexity API")
+                return None
+            
+            # Create result object
+            result = {
+                "doc_id": doc_id,
+                "job_id": job_details.get("id") or job_details.get("job_id"),
+                "company": job_details.get("company"),
+                "job_title": job_details.get("title"),
+                "content": tailored_cv,
+                "created_at": datetime.now().isoformat()
+            }
+            
+            # Save to database
+            db.save_tailored_cv(doc_id, job_details.get("id") or job_details.get("job_id"), result)
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error creating tailored CV: {str(e)}")
+            return None
+            
     def _create_analysis_prompt(self, cv_content: str) -> str:
         """
         Create a prompt for the Perplexity API to analyze a CV document.
@@ -225,6 +342,60 @@ class PerplexityAPI:
         Your response should be valid JSON that can be parsed directly, with no other text before or after.
         """
     
+    def _create_tailored_cv_prompt(self, cv_content: str, cv_keywords: Dict[str, Any], job_details: Dict[str, Any]) -> str:
+        """
+        Create a prompt for the Perplexity API to generate a tailored CV.
+        """
+        job_title = job_details.get("title", "")
+        company = job_details.get("company", "")
+        job_description = job_details.get("description", "")
+        requirements = job_details.get("requirements", [])
+        
+        skills = cv_keywords.get("skills", [])
+        experiences = cv_keywords.get("job_titles", [])
+        achievements = cv_keywords.get("key_achievements", [])
+        education = [f"{cv_keywords.get('education_level')} in {cv_keywords.get('education_field')}"] if cv_keywords.get('education_level') and cv_keywords.get('education_field') else []
+        
+        req_text = "\n".join(f"- {req}" for req in requirements) if isinstance(requirements, list) else requirements
+        
+        return f"""
+        I need you to create a professionally formatted and tailored CV/Resume for the following job:
+        
+        JOB TITLE: {job_title}
+        COMPANY: {company}
+        
+        JOB DESCRIPTION:
+        ```
+        {job_description}
+        ```
+        
+        JOB REQUIREMENTS:
+        ```
+        {req_text}
+        ```
+        
+        Here is the candidate's original CV:
+        ```
+        {cv_content}
+        ```
+        
+        Key information from the CV:
+        - Skills: {", ".join(skills) if skills else "N/A"}
+        - Previous Positions: {", ".join(experiences) if experiences else "N/A"}
+        - Education: {", ".join(education) if education else "N/A"}
+        - Achievements: {", ".join(achievements) if achievements else "N/A"}
+        
+        Create a well-structured HTML formatted CV that is specifically tailored for this job position. The CV should:
+        1. Highlight the candidate's skills and experiences that best match the job requirements
+        2. Use clean HTML formatting with <section>, <h2>, <h3>, <ul>, <li>, <p> tags for structure
+        3. Be organized into standard sections (Profile, Experience, Education, Skills)
+        4. Include a brief professional summary at the top
+        5. Use bullet points for achievements and responsibilities
+        6. Be ready to display directly in a webpage
+        
+        Only return the HTML formatted CV, nothing else.
+        """
+    
     def _process_response(self, response_text: str) -> Dict[str, Any]:
         """
         Process the API response text into structured data.
@@ -279,8 +450,12 @@ class PerplexityAPI:
         default_result = []
         
         try:
-            logger.debug(f"Raw job search response text: {response_text[:200]}...")  # Log first 200 chars
+            logger.info(f"Raw job search response text preview: {response_text[:100]}...")  # Log first 100 chars
             
+            if not response_text or response_text.strip() == "":
+                logger.error("Empty response text received from job search")
+                return default_result
+                
             # Extract JSON part from the response
             json_content = self._extract_json_from_text(response_text)
             
@@ -289,6 +464,11 @@ class PerplexityAPI:
                 return default_result
                 
             # Parse the JSON
+            logger.info(f"Attempting to parse JSON content: {json_content[:100]}...")
+            if not json_content.strip():
+                logger.error("Empty JSON content after extraction")
+                return default_result
+                
             parsed_result = json.loads(json_content)
             
             # Ensure result is a list
@@ -332,58 +512,89 @@ class PerplexityAPI:
             Extracted JSON string or empty string if no JSON found
         """
         if not text:
+            logger.warning("Empty text provided to JSON extraction")
             return ""
             
         text = text.strip()
+        logger.info(f"Extracting JSON from text of length {len(text)}")
         
-        # Case 1: Response has <think> tags - extract everything after the last tag
-        if "<think>" in text:
-            parts = text.split("```json")
-            if len(parts) > 1:
-                # Extract content between ```json and ```
-                json_part = parts[1].split("```")[0].strip()
-                return json_part
+        try:
+            # Case 1: Response has <think> tags - extract everything after the last tag
+            if "<think>" in text:
+                parts = text.split("```json")
+                if len(parts) > 1:
+                    # Extract content between ```json and ```
+                    json_part = parts[1].split("```")[0].strip()
+                    return json_part
+                    
+            # Case 2: Standard markdown JSON block with ```json
+            if "```json" in text.lower():
+                parts = text.split("```json", 1)  # Split on first occurrence only
+                if len(parts) > 1:
+                    # Extract content between ```json and ```
+                    json_part = parts[1].split("```", 1)[0].strip()
+                    logger.info(f"Found JSON in markdown block: {json_part[:50]}...")
+                    return json_part
+                    
+            # Case 3: Generic code block with ```
+            if "```" in text:
+                parts = text.split("```", 2)  # Split into at most 3 parts to get before, content, after
+                # Take the content of the first code block
+                if len(parts) > 1:
+                    potential_json = parts[1].strip()
+                    # Try to validate if it's JSON by finding { or [ at the start
+                    if potential_json.lstrip().startswith(("{", "[")):
+                        logger.info(f"Found JSON in code block: {potential_json[:50]}...")
+                        return potential_json
+                    
+            # Case 4: Direct JSON object (look for start of JSON object)
+            if text.lstrip().startswith("{"):
+                # Find the first { and the last } to extract complete JSON object
+                start = text.find("{")
+                end = text.rfind("}") + 1
+                if start >= 0 and end > start:
+                    json_part = text[start:end]
+                    logger.info(f"Found direct JSON object: {json_part[:50]}...")
+                    return json_part
+                    
+            # Case 5: If the response contains "json" followed by "{", extract that part
+            if "json" in text.lower() and "{" in text:
+                start = text.find("{")
+                end = text.rfind("}") + 1
+                if start >= 0 and end > start:
+                    json_part = text[start:end]
+                    logger.info(f"Found JSON after 'json' keyword: {json_part[:50]}...")
+                    return json_part
+            
+            # Case 6: Check for array format
+            if text.lstrip().startswith("["):
+                # Find the first [ and the last ] to extract complete JSON array
+                start = text.find("[")
+                end = text.rfind("]") + 1
+                if start >= 0 and end > start:
+                    json_part = text[start:end]
+                    logger.info(f"Found JSON array: {json_part[:50]}...")
+                    return json_part
+            
+            # Case 7: Look for any JSON-like structure anywhere in the text
+            import re
+            # Look for patterns like [{ or { that might indicate JSON
+            json_start_match = re.search(r'[\[\{]', text)
+            if json_start_match:
+                start_pos = json_start_match.start()
+                # If we find a start bracket, extract from there to the end and hope it's valid JSON
+                potential_json = text[start_pos:]
+                logger.info(f"Found potential JSON using regex: {potential_json[:50]}...")
+                return potential_json
                 
-        # Case 2: Standard markdown JSON block with ```json
-        if "```json" in text.lower():
-            parts = text.lower().split("```json")
-            if len(parts) > 1:
-                json_part = parts[1].split("```")[0].strip()
-                return json_part
-                
-        # Case 3: Generic code block with ```
-        if "```" in text:
-            parts = text.split("```")
-            # Take the content of the first code block
-            if len(parts) > 1:
-                return parts[1].strip()
-                
-        # Case 4: Direct JSON (look for start of JSON object)
-        if text.lstrip().startswith("{"):
-            # Find the first { and the last } to extract complete JSON object
-            start = text.find("{")
-            end = text.rfind("}") + 1
-            if start >= 0 and end > start:
-                return text[start:end]
-                
-        # Case 5: If the response contains "json" followed by "{", extract that part
-        if "json" in text.lower() and "{" in text:
-            start = text.find("{")
-            end = text.rfind("}") + 1
-            if start >= 0 and end > start:
-                return text[start:end]
-        
-        # Case 6: Check for array format
-        if text.lstrip().startswith("["):
-            # Find the first [ and the last ] to extract complete JSON array
-            start = text.find("[")
-            end = text.rfind("]") + 1
-            if start >= 0 and end > start:
-                return text[start:end]
-        
-        # If we can't definitively extract JSON, return the original string
-        # and let the JSON parser try to handle it
-        return text
+            # If we can't definitively extract JSON, log it and return the original string
+            logger.warning("Could not extract specific JSON from text, returning full text for parser to handle")
+            return text
+            
+        except Exception as e:
+            logger.error(f"Error extracting JSON from text: {str(e)}")
+            # Return the original text as a fallback
+            return text
 
 # Create a singleton instance
 perplexity_api = PerplexityAPI()

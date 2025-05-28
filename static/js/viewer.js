@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Attach download button handler
     attachDownloadHandler();
+    
+    // Ensure window.DB is properly initialized
+    console.log("Checking DB module availability in viewer.js:", 
+                window.DB ? "Available" : "Not available", 
+                window.DB && window.DB.loadFileDocument ? "loadFileDocument available" : "loadFileDocument NOT available");
 });
 
 // Function to load files from the uploads directory
